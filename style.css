@@ -1,0 +1,343 @@
+/* ==========================================================================
+   1. CONFIGURAÇÕES GERAIS E RESET
+   ========================================================================== */
+* { 
+  box-sizing: border-box; 
+  margin: 0; 
+  padding: 0; 
+}
+
+body { 
+  background: #dde1e7; 
+  font-family: 'Segoe UI', Arial, sans-serif; 
+  font-size: 13px; 
+  color: #1a202c; 
+  min-height: 100vh; 
+  padding: 24px;
+}
+
+/* ==========================================================================
+   2. ESTRUTURA DE LAYOUT
+   ========================================================================== */
+#tela-orcamento { 
+  width: 100%;
+}
+
+/* Topbar de Ações */
+.topbar { 
+  max-width: 900px; 
+  margin: 0 auto 14px; 
+  display: flex; 
+  justify-content: space-between; 
+  align-items: center; 
+}
+
+.topbar-right { 
+  display: flex; 
+  gap: 10px; 
+}
+
+/* O Card Branco Principal */
+.card { 
+  max-width: 900px; 
+  margin: 0 auto; 
+  background: #fff; 
+  border-radius: 10px; 
+  box-shadow: 0 6px 32px rgba(0,0,0,0.13); 
+  overflow: hidden; 
+}
+
+.body { 
+  padding: 26px 32px; 
+}
+
+/* ==========================================================================
+   3. CABEÇALHO E ELEMENTOS DE TEXTO
+   ========================================================================== */
+.header { 
+  display: flex; 
+  justify-content: space-between; 
+  align-items: center; 
+  padding: 10px 0 22px 0; 
+  border-bottom: 2px solid #e2e8f0; 
+}
+
+.logo-imagem {
+  height: 50px;      /* Altura ideal para o topo */
+  width: auto;        /* Mantém a proporção perfeita */
+  display: block;
+  object-fit: contain;
+}
+
+.header-right { 
+  text-align: right; 
+}
+
+.orc-badge { 
+  background: #2b6cb0; 
+  color: #fff; 
+  border-radius: 6px; 
+  padding: 6px 14px; 
+  font-size: 12px; 
+  font-weight: bold; 
+  margin-bottom: 6px; 
+  display: inline-block; 
+  letter-spacing: .04em; 
+}
+
+.header-right .contact { 
+  color: #555; 
+  font-size: 11.5px; 
+  line-height: 1.6; 
+}
+
+.date-row { 
+  display: flex; 
+  align-items: center; 
+  gap: 8px; 
+  font-size: 13px; 
+  margin-bottom: 16px; 
+}
+
+.date-row input[type=text] {
+  border-bottom: 1px dotted #bbb !important;
+}
+
+.intro { 
+  color: #555; 
+  font-style: italic; 
+  margin-bottom: 14px; 
+}
+
+/* Bloco do Cliente */
+.client-box { 
+  background: #f7f8fa; 
+  border: 1px solid #e2e8f0; 
+  border-radius: 8px; 
+  padding: 16px 20px; 
+  margin-bottom: 18px; 
+  display: grid; 
+  grid-template-columns: 1fr 1fr 1fr; 
+  gap: 16px; 
+}
+
+.field label { 
+  display: block; 
+  font-size: 10px; 
+  font-weight: 700; 
+  color: #718096; 
+  text-transform: uppercase; 
+  letter-spacing: .06em; 
+  margin-bottom: 4px; 
+}
+
+/* ==========================================================================
+   4. TABELA DE ITENS E RODAPÉ (TRAVADO CONTRA QUEBRAS)
+   ========================================================================== */
+table { 
+  width: 100%; 
+  border-collapse: collapse; 
+  margin-top: 15px;
+}
+
+thead tr { 
+  background: #1a202c; 
+}
+
+/* Definição fluida das colunas principais */
+thead th:nth-child(1) { width: 35%; } /* ITEM */
+thead th:nth-child(2) { width: 8%; }  /* QTD */
+thead th:nth-child(3) { width: 14%; } /* VALOR UNIT. */
+thead th:nth-child(4) { width: 25%; } /* OBS. DO ITEM */
+thead th:nth-child(5) { width: 13%; } /* SUB TOTAL */
+thead th:nth-child(6) { width: 5%; }  /* X */
+
+thead th { 
+  color: #fff; 
+  padding: 10px 12px; 
+  font-size: 11.5px; 
+  font-weight: 700; 
+  letter-spacing: .05em; 
+  text-align: left; 
+}
+
+thead th.center, td.center { text-align: center; }
+thead th.right, td.right { text-align: right; }
+
+tbody tr:nth-child(even) { background: #f9fafb; }
+tbody tr:nth-child(odd) { background: #fff; }
+
+tbody td { 
+  padding: 8px 12px; 
+  border-bottom: 1px solid #e2e8f0; 
+  vertical-align: middle; 
+}
+
+/* Ajuste Fixo e Seguro para as Colunas do Rodapé */
+tfoot td { 
+  padding: 6px 12px; 
+  border-bottom: 1px solid #e2e8f0; 
+}
+
+tfoot td.gray { 
+  background: #f1f3f6; 
+  text-align: right; 
+  font-weight: 700; 
+  font-size: 12px; 
+  color: #4a5568; 
+  white-space: nowrap;  /* Bloqueia a quebra de texto das palavras */
+  width: 150px;         /* Força a largura ideal para "Local de Fat. / Entrega" */
+  min-width: 150px;
+  border-left: 1px solid #e2e8f0;
+  border-right: 1px solid #e2e8f0;
+}
+
+tfoot td.val { 
+  text-align: right; 
+  font-weight: 600; 
+  width: 130px;         /* Força a largura ideal para os valores e selects */
+  min-width: 130px;
+  border-right: 1px solid #e2e8f0;
+}
+
+tfoot td.val.big { 
+  font-size: 15px; 
+  font-weight: 800; 
+  color: #2b6cb0; 
+}
+
+tfoot td.val.green { 
+  color: #276749; 
+}
+
+/* ==========================================================================
+   5. FORMULÁRIOS E INPUTS
+   ========================================================================== */
+input[type=text], input[type=number] {
+  border: none; 
+  border-bottom: 1.5px dashed #bbb; 
+  background: transparent;
+  font-size: 13px; 
+  font-family: inherit; 
+  color: #1a202c;
+  outline: none; 
+  padding: 3px 2px; 
+  width: 100%; 
+}
+
+input[type=text]:focus, input[type=number]:focus { 
+  border-bottom-color: #2b6cb0; 
+}
+
+select { 
+  border: 1px solid #cbd5e0; 
+  border-radius: 5px; 
+  background: #fff; 
+  font-size: 12px; 
+  font-family: inherit; 
+  padding: 4px 6px; 
+  outline: none; 
+  cursor: pointer; 
+  width: 100%;
+}
+
+textarea { 
+  border: 1px dashed #bbb; 
+  border-radius: 5px; 
+  background: transparent; 
+  font-family: inherit; 
+  font-size: 12px; 
+  color: #555; 
+  outline: none; 
+  padding: 10px; 
+  width: 100%; 
+  resize: vertical; 
+  line-height: 1.6; 
+}
+
+/* Elementos de Ação Inferiores */
+.desconto-row { 
+  display: flex; 
+  align-items: center; 
+  gap: 10px; 
+  margin: 20px 0 10px; 
+}
+
+.desconto-row label { 
+  font-size: 12px; 
+  font-weight: 600; 
+  color: #555; 
+}
+
+.desconto-row select { width: auto; }
+.desconto-row input { width: 90px; }
+
+.btn-add { 
+  background: none; 
+  border: 2px dashed #2b6cb0; 
+  color: #2b6cb0; 
+  border-radius: 7px; 
+  font-weight: 700; 
+  font-size: 13px; 
+  cursor: pointer; 
+  padding: 8px 16px; 
+  margin-bottom: 20px; 
+  transition: all .15s; 
+}
+
+.btn-add:hover { background: #ebf4ff; }
+
+.btn-remove { 
+  background: none; 
+  border: none; 
+  color: #cbd5e0; 
+  cursor: pointer; 
+  font-size: 14px; 
+}
+.btn-remove:hover { color: #e53e3e; }
+
+/* Botões Superiores */
+.btn { 
+  border: none; 
+  border-radius: 6px; 
+  padding: 8px 16px; 
+  font-size: 13px; 
+  font-weight: bold; 
+  cursor: pointer; 
+  display: flex; 
+  align-items: center; 
+  gap: 6px; 
+}
+
+.btn-blue { background: #2b6cb0; color: #fff; }
+.btn-blue:hover { background: #2c5282; }
+.btn-green { background: #276749; color: #fff; }
+.btn-green:hover { background: #1e4d35; }
+.btn-gray { background: #edf2f7; color: #4a5568; border: 1px solid #cbd5e0; }
+.btn-gray:hover { background: #e2e8f0; }
+
+.obs-box { 
+  border-top: 1px solid #e2e8f0; 
+  padding-top: 16px; 
+  margin-top: 20px; 
+}
+
+.obs-label { 
+  font-size: 10px; 
+  font-weight: 700; 
+  color: #718096; 
+  text-transform: uppercase; 
+  letter-spacing: .06em; 
+  margin-bottom: 6px; 
+  display: block; 
+}
+
+/* ==========================================================================
+   6. REGRAS DE IMPRESSÃO
+   ========================================================================== */
+@media print {
+  body { background: white; padding: 0; }
+  .no-print { display: none !important; }
+  .card { box-shadow: none !important; border-radius: 0 !important; max-width: 100%; }
+  input[type=text], input[type=number], select, textarea { border: none !important; background: transparent !important; padding: 0 !important; }
+}

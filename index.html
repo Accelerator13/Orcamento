@@ -1,246 +1,123 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="color-scheme" content="light" />
-  <title>Gerador de Orçamento – Online Shopping</title>
-  <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { background: #dde1e7; font-family: 'Segoe UI', Arial, sans-serif; font-size: 13px; color: #1a202c; min-height: 100vh; }
-
-    /* ── TELA DE HISTÓRICO ── */
-    #tela-historico { display:none; max-width:900px; margin:0 auto; padding:24px; }
-    #tela-orcamento { padding:24px; }
-
-    /* ── TOPBAR ── */
-    .topbar { max-width:900px; margin:0 auto 14px; display:flex; justify-content:space-between; align-items:center; }
-    .topbar-right { display:flex; gap:10px; }
-    .btn { border:none; border-radius:6px; padding:9px 18px; font-size:13px; font-weight:bold; cursor:pointer; display:flex; align-items:center; gap:7px; transition:all .15s; }
-    .btn-blue { background:#2b6cb0; color:#fff; box-shadow:0 2px 8px rgba(0,0,0,0.13); }
-    .btn-blue:hover { background:#2c5282; }
-    .btn-green { background:#276749; color:#fff; box-shadow:0 2px 8px rgba(0,0,0,0.13); }
-    .btn-green:hover { background:#1e4d35; }
-    .btn-gray { background:#e2e8f0; color:#2d3748; }
-    .btn-gray:hover { background:#cbd5e0; }
-    .btn-red { background:#c53030; color:#fff; }
-    .btn-red:hover { background:#9b2c2c; }
-    .btn-outline { background:transparent; border:2px solid #2b6cb0; color:#2b6cb0; }
-    .btn-outline:hover { background:#ebf4ff; }
-    .btn-sm { padding:6px 12px; font-size:12px; }
-
-    /* ── CARD ── */
-    .card { max-width:900px; margin:0 auto; background:#fff; border-radius:10px; box-shadow:0 6px 32px rgba(0,0,0,0.13); overflow:hidden; }
-
-    /* ── HEADER ── */
-    .header { display:flex; justify-content:space-between; align-items:center; padding:22px 32px; border-bottom:2px solid #e2e8f0; background:linear-gradient(135deg,#fff 80%,#ebf4ff); }
-    .header-left img { height:58px; }
-    .header-right { text-align:right; }
-    .orc-badge { background:#2b6cb0; color:#fff; border-radius:6px; padding:6px 14px; font-size:12px; font-weight:bold; margin-bottom:6px; display:inline-block; letter-spacing:.04em; }
-    .header-right .contact { color:#555; font-size:11.5px; line-height:1.9; }
-    .header-right input[type=text] { text-align:right; }
-
-    /* ── BODY ── */
-    .body { padding:26px 32px; }
-
-    /* ── INPUTS ── */
-    input[type=text], input[type=number] {
-      border:none; border-bottom:1.5px dashed #bbb; background:transparent;
-      font-size:13px; font-family:inherit; color:#1a202c;
-      outline:none; padding:2px 2px; width:100%; transition:border-color .15s;
-    }
-    input[type=text]:focus, input[type=number]:focus { border-bottom-color:#2b6cb0; }
-    select { border:1px solid #cbd5e0; border-radius:5px; background:#fff; font-size:13px; font-family:inherit; padding:6px 10px; outline:none; cursor:pointer; }
-    select:focus { border-color:#2b6cb0; }
-    textarea { border:1px dashed #bbb; border-radius:5px; background:transparent; font-family:inherit; font-size:12px; color:#555; font-style:italic; outline:none; padding:9px; width:100%; resize:vertical; line-height:1.7; transition:border-color .15s; }
-    textarea:focus { border-color:#2b6cb0; }
-
-    /* ── DATA ── */
-    .date-row { display:flex; align-items:center; gap:8px; font-size:13px; margin-bottom:16px; }
-    .date-row strong { font-weight:700; }
-
-    /* ── CLIENTE ── */
-    .client-box { background:#f7f8fa; border:1px solid #e2e8f0; border-radius:8px; padding:16px 20px; margin-bottom:18px; display:grid; grid-template-columns:1fr 1fr 1fr; gap:16px; }
-    .field label { display:block; font-size:10px; font-weight:700; color:#718096; text-transform:uppercase; letter-spacing:.06em; margin-bottom:4px; }
-
-    /* ── INTRO ── */
-    .intro { color:#555; font-style:italic; margin-bottom:14px; }
-
-    /* ── TABELA ── */
-    table { width:100%; border-collapse:collapse; }
-    thead tr { background:#1a202c; }
-    thead th { color:#fff; padding:10px 12px; font-size:11.5px; font-weight:700; letter-spacing:.05em; text-align:left; }
-    thead th.center { text-align:center; }
-    thead th.right { text-align:right; }
-    tbody tr { transition:background .1s; }
-    tbody tr:nth-child(even) { background:#f9fafb; }
-    tbody tr:nth-child(odd) { background:#fff; }
-    tbody tr:hover { background:#ebf4ff; }
-    tbody td { padding:8px 12px; border-bottom:1px solid #e2e8f0; vertical-align:middle; }
-    tbody td.center { text-align:center; }
-    tbody td.right { text-align:right; font-weight:600; }
-    tfoot td { padding:9px 12px; border-bottom:1px solid #e2e8f0; }
-    tfoot td.gray { background:#f1f3f6; text-align:right; font-weight:700; font-size:12px; color:#4a5568; }
-    tfoot td.val { text-align:right; font-weight:600; }
-    tfoot td.val.big { font-size:16px; font-weight:800; color:#2b6cb0; }
-    tfoot td.val.green { color:#276749; font-weight:700; }
-    tfoot td.val.red { color:#c53030; font-weight:700; }
-
-    /* ── DESCONTO ── */
-    .desconto-row { display:flex; align-items:center; gap:10px; margin:10px 0 0; flex-wrap:wrap; }
-    .desconto-row label { font-size:12px; font-weight:600; color:#555; }
-    .desconto-row select { padding:4px 8px; font-size:12px; }
-    .desconto-row input { width:110px; }
-
-    /* ── BTN ADICIONAR ── */
-    .btn-add { background:none; border:2px dashed #2b6cb0; color:#2b6cb0; border-radius:7px; font-weight:700; font-size:13px; cursor:pointer; display:flex; align-items:center; gap:6px; padding:8px 16px; margin:10px 0 6px; transition:all .15s; }
-    .btn-add:hover { background:#ebf4ff; }
-
-    /* ── BTN REMOVER ── */
-    .btn-remove { background:none; border:none; color:#e53e3e; cursor:pointer; font-size:16px; padding:0 4px; transition:opacity .15s; }
-    .btn-remove:disabled { opacity:.2; cursor:default; }
-
-    /* ── PARCELAS INFO ── */
-    .parcelas-info { background:#f0fff4; border:1px solid #9ae6b4; border-radius:6px; padding:8px 14px; font-size:12px; color:#276749; font-weight:600; margin-top:6px; display:none; }
-
-    /* ── OBS ── */
-    .obs-box { border-top:1px solid #e2e8f0; padding-top:16px; margin-top:14px; }
-    .obs-label { font-size:10px; font-weight:700; color:#718096; text-transform:uppercase; letter-spacing:.06em; margin-bottom:6px; display:block; }
-
-    /* ── ASSINATURA ── */
-    .assinatura { display:grid; grid-template-columns:1fr 1fr; gap:40px; margin-top:24px; padding-top:16px; border-top:1px solid #e2e8f0; }
-    .assinatura-campo { text-align:center; }
-    .assinatura-linha { border-bottom:1.5px solid #1a202c; margin-bottom:6px; height:36px; }
-    .assinatura-label { font-size:11px; color:#555; }
-
-    /* ── RODAPÉ ── */
-    .footer { background:#1a202c; color:#fff; display:flex; justify-content:space-between; align-items:center; padding:11px 32px; font-size:12px; margin-top:12px; }
-
-    /* ── HISTÓRICO ── */
-    .hist-card { background:#fff; border-radius:8px; box-shadow:0 2px 12px rgba(0,0,0,0.09); padding:16px 20px; margin-bottom:12px; display:flex; justify-content:space-between; align-items:center; }
-    .hist-card:hover { box-shadow:0 4px 20px rgba(0,0,0,0.13); }
-    .hist-info h3 { font-size:14px; font-weight:700; margin-bottom:4px; }
-    .hist-info p { font-size:12px; color:#718096; }
-    .hist-badge { background:#ebf4ff; color:#2b6cb0; border-radius:5px; padding:3px 10px; font-size:11px; font-weight:700; }
-    .hist-actions { display:flex; gap:8px; align-items:center; }
-    .empty-hist { text-align:center; color:#a0aec0; padding:48px 0; font-size:15px; }
-
-    /* ── TOAST ── */
-    #toast { position:fixed; bottom:28px; right:28px; background:#276749; color:#fff; border-radius:8px; padding:12px 22px; font-weight:700; font-size:13px; box-shadow:0 4px 16px rgba(0,0,0,0.18); display:none; z-index:999; animation:fadeup .3s; }
-    @keyframes fadeup { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
-
-    /* ── PRINT ── */
-    @media print {
-      body { background:white; padding:0; font-size:12px; }
-      .no-print { display:none !important; }
-      .card { box-shadow:none !important; border-radius:0 !important; max-width:100%; }
-      #tela-historico { display:none !important; }
-      #tela-orcamento { padding:0; }
-      .topbar { display:none; }
-      tbody tr:hover { background:inherit !important; }
-      .assinatura { margin-top:40px; }
-    }
-  </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sistema de Orçamentos - Online Shopping</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-<!-- TOAST -->
-<div id="toast">✓ Orçamento salvo!</div>
-
-<!-- ══════════════ TELA ORÇAMENTO ══════════════ -->
-<div id="tela-orcamento">
   <div class="topbar no-print">
-    <div class="topbar-right" style="justify-content:flex-start; gap:10px;">
-      <button class="btn btn-outline" onclick="verHistorico()">📋 Histórico de Orçamentos</button>
-      <button class="btn btn-gray" onclick="novoOrcamento()">＋ Novo Orçamento</button>
+    <div class="topbar-left">
+      <button class="btn btn-gray" onclick="window.location.reload()">
+        📄 Histórico de Orçamentos
+      </button>
+      <button class="btn btn-gray">
+        + Novo Orçamento
+      </button>
     </div>
     <div class="topbar-right">
-      <button class="btn btn-green" onclick="salvarOrcamento()">💾 Salvar Rascunho</button>
-      <button class="btn btn-blue" onclick="window.print()">🖨️ Imprimir / PDF</button>
+      <button class="btn btn-green">
+        💾 Salvar Rascunho
+      </button>
+      <button class="btn btn-blue" onclick="window.print()">
+        🖨️ Imprimir / PDF
+      </button>
     </div>
   </div>
 
-  <div class="card">
-    <!-- HEADER -->
-    <div class="header">
-      <div class="header-left">
-        <img src="data:image/png;base64,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" alt="Online Shopping" onerror="this.style.display='none';document.getElementById('logo-fallback').style.display='block'" />
-        <div id="logo-fallback" style="display:none;font-size:22px;font-weight:bold;color:#2b6cb0;">Online Shopping</div>
-      </div>
-      <div class="header-right">
-        <div class="orc-badge" id="orc-numero">ORC-2026-001</div>
-        <div class="contact">
-          <input type="text" id="loja-endereco" value="AV. João Pinheiro, 796 - Centro" style="width:270px;" /><br>
-          <input type="text" id="loja-cidade" value="Uberlândia / Uberaba" style="width:270px;" oninput="sync('loja-cidade','footer-cidade')" /> &nbsp;☎&nbsp;
-          <input type="text" id="loja-tel" value="(34) 3228-0115" style="width:120px;" oninput="sync('loja-tel','footer-tel')" /><br>
-          <input type="text" id="loja-site" value="www.onlineshopping.com.br" style="width:270px;" oninput="sync('loja-site','footer-site')" />
+  <div id="tela-orcamento" class="card">
+    <div class="body">
+      
+      <div class="header">
+        <div class="header-left">
+          <img src="logo.png" alt="Online Shopping" class="logo-imagem" />
+        </div>
+        <div class="header-right">
+          <span class="orc-badge">ORC-2026-001</span>
+          <div class="contact">
+            AV. João Pinheiro, 796 - Centro<br>
+            Uberlândia / Uberaba ☎ (34) 3228-0115<br>
+            www.onlineshopping.com.br
+          </div>
         </div>
       </div>
-    </div>
 
-    <div class="body">
-      <!-- DATA -->
-      <div class="date-row">
+      <div class="date-row" style="margin-top: 20px;">
         <strong>Uberlândia-MG,</strong>
-        <input type="text" id="data-emissao" style="width:230px;" />
+        <input type="text" id="data-orcamento" value="16 de Junho de 2026" style="width: 150px;" />
       </div>
 
-      <!-- CLIENTE -->
       <div class="client-box">
         <div class="field">
-          <label>Orçamento para</label>
-          <input type="text" id="cli-nome" placeholder="Nome do cliente / empresa" />
+          <label>Orçamento Para</label>
+          <input type="text" id="cliente-nome" placeholder="Nome do cliente / empresa" />
         </div>
         <div class="field">
           <label>CNPJ / CPF</label>
-          <input type="text" id="cli-cnpj" placeholder="00.000.000/0001-00" />
+          <input type="text" id="cliente-documento" placeholder="00.000.000/0001-00" />
         </div>
         <div class="field">
-          <label>Responsável pela informação</label>
-          <input type="text" id="cli-resp" placeholder="Nome do responsável" />
+          <label>Responsável pela Informação</label>
+          <input type="text" id="responsavel-nome" placeholder="Nome do responsável" />
         </div>
       </div>
 
       <p class="intro">Conforme solicitação estamos enviando nossos melhores preços:</p>
 
-      <!-- TABELA -->
       <table>
         <thead>
           <tr>
-            <th style="width:38%">ITEM</th>
-            <th class="center" style="width:55px">QTD</th>
-            <th class="right" style="width:115px">VALOR UNIT.</th>
-            <th style="width:38%" class="no-print">OBS. DO ITEM</th>
-            <th class="right" style="width:115px">SUB TOTAL</th>
-            <th style="width:34px" class="no-print"></th>
+            <th>ITEM</th>
+            <th class="center">QTD</th>
+            <th class="right">VALOR UNIT.</th>
+            <th>OBS. DO ITEM</th>
+            <th class="right">SUB TOTAL</th>
+            <th class="no-print" style="width: 40px;"></th>
           </tr>
         </thead>
-        <tbody id="itens-body"></tbody>
+        <tbody id="tabela-produtos">
+          <tr>
+            <td>
+              <input type="text" placeholder="Descrição do produto" value="Descrição do produto" />
+            </td>
+            <td class="center">
+              <input type="number" class="center" value="1" style="width: 50px;" oninput="calcular()" />
+            </td>
+            <td class="right">
+              <input type="text" class="right" value="0.00" style="width: 80px;" oninput="calcular()" />
+            </td>
+            <td>
+              <input type="text" placeholder="Ex: sob encomenda..." value="Ex: sob encomenda..." />
+            </td>
+            <td class="right" style="color: #2b6cb0; font-weight: 600;">R$ 0,00</td>
+            <td class="center no-print">
+              <button class="btn-remove">✕</button>
+            </td>
+          </tr>
+        </tbody>
         <tfoot>
           <tr>
-            <td colspan="4" style="border-bottom:1px solid #e2e8f0" class="no-print"></td>
-            <td colspan="3" style="border-bottom:1px solid #e2e8f0" class="print-only" hidden></td>
+            <td colspan="5" class="no-print"></td>
             <td class="gray">Subtotal</td>
             <td class="val" id="subtotal-display">R$ 0,00</td>
-            <td class="no-print"></td>
           </tr>
           <tr id="row-desconto" style="display:none">
-            <td colspan="4" style="border-bottom:1px solid #e2e8f0" class="no-print"></td>
+            <td colspan="5" class="no-print"></td>
             <td class="gray" style="color:#276749">Desconto</td>
             <td class="val green" id="desconto-display">– R$ 0,00</td>
-            <td class="no-print"></td>
           </tr>
           <tr>
-            <td colspan="4" style="border-bottom:1px solid #e2e8f0" class="no-print"></td>
+            <td colspan="5" class="no-print"></td>
             <td class="gray">Total</td>
             <td class="val big" id="total-display">R$ 0,00</td>
-            <td class="no-print"></td>
           </tr>
           <tr>
-            <td colspan="4" style="border-bottom:1px solid #e2e8f0" class="no-print"></td>
+            <td colspan="5" class="no-print"></td>
             <td class="gray">Cond. Pagmt</td>
             <td class="val">
-              <select id="cond-pag" onchange="calcular()" style="width:100%;font-weight:600;font-size:12px;">
+              <select id="cond-pag" onchange="calcular()">
                 <option value="avista">À vista (Dinheiro / Pix)</option>
                 <option value="2x">2x sem juros no cartão</option>
                 <option value="3x">3x sem juros no cartão</option>
@@ -250,347 +127,54 @@
                 <option value="outro">Outro</option>
               </select>
             </td>
-            <td class="no-print"></td>
           </tr>
           <tr id="row-parcelas" style="display:none">
-            <td colspan="4" style="border-bottom:1px solid #e2e8f0" class="no-print"></td>
-            <td colspan="2" style="border-bottom:1px solid #e2e8f0;text-align:right;">
-              <span id="parcelas-texto" style="font-size:12px;color:#276749;font-weight:600;font-style:italic;"></span>
+            <td colspan="5" class="no-print"></td>
+            <td colspan="2" style="text-align:right;">
+              <span id="parcelas-texto" style="font-size:12px; color:#276749; font-weight:600; font-style:italic;"></span>
             </td>
-            <td class="no-print"></td>
           </tr>
           <tr>
-            <td colspan="4" style="border-bottom:1px solid #e2e8f0" class="no-print"></td>
+            <td colspan="5" class="no-print"></td>
             <td class="gray">Prev. Entrega</td>
-            <td class="val"><input type="text" id="prev-entrega" value="Imediato" style="text-align:right;font-weight:600;" /></td>
-            <td class="no-print"></td>
+            <td class="val"><input type="text" id="prev-entrega" value="Imediato" style="text-align:right; font-weight:600;" /></td>
           </tr>
           <tr>
-            <td colspan="4" style="border-bottom:1px solid #e2e8f0" class="no-print"></td>
+            <td colspan="5" class="no-print"></td>
             <td class="gray">Local de Fat. / Entrega</td>
-            <td class="val"><input type="text" id="local-entrega" value="Uberlândia - MG" style="text-align:right;font-weight:600;" /></td>
-            <td class="no-print"></td>
+            <td class="val"><input type="text" id="local-entrega" value="Uberlândia - MG" style="text-align:right; font-weight:600;" /></td>
           </tr>
         </tfoot>
       </table>
 
-      <!-- DESCONTO -->
       <div class="desconto-row no-print">
-        <label>🏷️ Desconto:</label>
+        <label>Desconto:</label>
         <select id="tipo-desconto" onchange="calcular()">
           <option value="reais">R$ (reais)</option>
-          <option value="percent">% (percentual)</option>
+          <option value="porcento">% (porcentagem)</option>
         </select>
-        <input type="number" id="valor-desconto" min="0" step="0.01" value="0" placeholder="0" oninput="calcular()" style="width:110px;" />
+        <input type="number" id="valor-desconto" value="0" oninput="calcular()" />
       </div>
 
-      <!-- BTN ADICIONAR -->
-      <button class="btn-add no-print" onclick="adicionarItem()">＋ Adicionar Produto</button>
+      <button class="btn-add no-print" id="btn-adicionar-produto">
+        + Adicionar Produto
+      </button>
 
-      <!-- OBSERVAÇÕES -->
-      <div class="obs-box">
-        <span class="obs-label no-print">Observações / Condições Gerais</span>
-        <textarea id="obs" rows="4" class="no-print">Para emissão da ordem de compra considerar nosso CNPJ 04.388.540/0004-98.
-Valor e prazo de entrega sujeito a alteração de acordo com a disponibilidade no fornecedor.
-Valores apenas para faturamento no estado de Minas Gerais, demais estados sujeito à alteração.
-Valor mínimo para faturamento boleto R$ 150,00. Valor mínimo para entrega CIF (Grátis) em Uberlândia-MG de R$ 500,00.
-Em casos de compra de produtos específicos não aceitamos troca e nem devolução. Favor validar com seu departamento de TI.</textarea>
-        <div id="obs-print" style="font-size:12px;color:#555;font-style:italic;line-height:1.8;display:none;"></div>
+     <div class="obs-box">
+        <label class="obs-label">Observações / Condições Gerais</label>
+        <textarea placeholder="Termos do orçamento..." style="height: 180px;">• Para emissão da ordem de compra considerar nosso CNPJ 04.388.540/0004-98;
+• Valor e prazo de entrega sujeito a alteração de acordo com a disponibilidade no fornecedor;
+• Prazo de entrega se aplica nos itens em vermelho;
+• Itens em vermelho não conseguimos devolução, pois é sob encomenda apenas pra sua compra;
+• Valores apenas para faturamento no estado de Minas Gerais, demais estados sujeito à alteração;
+• Valor mínimo para faturamento boleto R$ 150,00;
+• Valor mínimo para entrega CIF (Grátis) em Uberlândia-MG de R$ 500,00.
+• Em Casos de compra de produtos específicos com os nossos fornecedores para cumprir a demanda do cliente, de produtos cotados que não temos em nossos estoques, não aceitamos troca e nem devolução do mesmo. Favor avaliar e validar antes este orçamento com o seu departamento de TI ou áreas afins.</textarea>
       </div>
 
-      <!-- ASSINATURA -->
-      <div class="assinatura">
-        <div class="assinatura-campo">
-          <div class="assinatura-linha"></div>
-          <div class="assinatura-label">Assinatura do Vendedor</div>
-        </div>
-        <div class="assinatura-campo">
-          <div class="assinatura-linha"></div>
-          <div class="assinatura-label">Assinatura / Carimbo do Cliente</div>
-        </div>
-      </div>
-    </div>
-
-    <!-- RODAPÉ -->
-    <div class="footer">
-      <span><span id="footer-cidade">Uberlândia / Uberaba</span> &nbsp;|&nbsp; ☎ <span id="footer-tel">(34) 3228-0115</span></span>
-      <span id="footer-site">www.onlineshopping.com.br</span>
     </div>
   </div>
-</div>
 
-<!-- ══════════════ TELA HISTÓRICO ══════════════ -->
-<div id="tela-historico">
-  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
-    <h2 style="font-size:20px;font-weight:800;color:#1a202c;">📋 Histórico de Orçamentos</h2>
-    <button class="btn btn-gray" onclick="verOrcamento()">← Voltar</button>
-  </div>
-  <div id="lista-historico"></div>
-</div>
-
-<script>
-  // ── NÚMERO DO ORÇAMENTO ──
-  function gerarNumero() {
-    const hist = JSON.parse(localStorage.getItem('orcamentos') || '[]');
-    const ano = new Date().getFullYear();
-    const seq = String(hist.length + 1).padStart(3, '0');
-    return `ORC-${ano}-${seq}`;
-  }
-
-  // ── DATA ──
-  const meses = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
-  const hoje = new Date();
-  document.getElementById('data-emissao').value = `${String(hoje.getDate()).padStart(2,'0')} de ${meses[hoje.getMonth()]} de ${hoje.getFullYear()}`;
-  document.getElementById('orc-numero').textContent = gerarNumero();
-
-  // ── SYNC FOOTER ──
-  function sync(fromId, toId) {
-    document.getElementById(toId).textContent = document.getElementById(fromId).value;
-  }
-
-  // ── ITENS ──
-  let contadorId = 0;
-
-  function adicionarItem() {
-    contadorId++;
-    const id = contadorId;
-    const tbody = document.getElementById('itens-body');
-    const tr = document.createElement('tr');
-    tr.id = 'item-' + id;
-    tr.innerHTML = `
-      <td><input type="text" placeholder="Descrição do produto" oninput="calcular()" /></td>
-      <td class="center"><input type="number" min="1" value="1" oninput="calcular()" style="text-align:center;width:48px;" /></td>
-      <td class="right"><input type="number" step="0.01" placeholder="0,00" oninput="calcular()" style="text-align:right;width:100px;" /></td>
-      <td class="no-print"><input type="text" placeholder="Ex: sob encomenda, item em vermelho..." style="font-size:12px;color:#718096;" /></td>
-      <td class="right subtotal" style="color:#2b6cb0;">R$ 0,00</td>
-      <td class="center no-print"><button class="btn-remove" onclick="removerItem(${id})" title="Remover">✕</button></td>
-    `;
-    tbody.appendChild(tr);
-    atualizarBotoesRemover();
-    calcular();
-  }
-
-  function removerItem(id) {
-    const el = document.getElementById('item-' + id);
-    if (el) el.remove();
-    atualizarBotoesRemover();
-    calcular();
-  }
-
-  function atualizarBotoesRemover() {
-    const btns = document.querySelectorAll('.btn-remove');
-    btns.forEach(b => b.disabled = btns.length === 1);
-  }
-
-  // ── CALCULAR ──
-  function calcular() {
-    const linhas = document.querySelectorAll('#itens-body tr');
-    let subtotal = 0;
-    linhas.forEach(tr => {
-      const inputs = tr.querySelectorAll('input[type=number]');
-      const qtd = parseFloat(inputs[0]?.value) || 1;
-      const unit = parseFloat(inputs[1]?.value) || 0;
-      const sub = qtd * unit;
-      subtotal += sub;
-      tr.querySelector('.subtotal').textContent = fmt(sub);
-    });
-
-    // Desconto
-    const tipoDesc = document.getElementById('tipo-desconto').value;
-    const valDesc = parseFloat(document.getElementById('valor-desconto').value) || 0;
-    let desconto = tipoDesc === 'percent' ? subtotal * (valDesc / 100) : valDesc;
-    if (desconto > subtotal) desconto = subtotal;
-
-    // Condição pagamento / juros
-    const cond = document.getElementById('cond-pag').value;
-    let acrescimo = 0, parcelas = 0;
-    if (cond === '6x') { acrescimo = 0.05; parcelas = 6; }
-    else if (cond === '10x') { acrescimo = 0.08; parcelas = 10; }
-    else if (cond === '2x') parcelas = 2;
-    else if (cond === '3x') parcelas = 3;
-
-    const baseTotal = subtotal - desconto;
-    const total = baseTotal * (1 + acrescimo);
-
-    document.getElementById('subtotal-display').textContent = fmt(subtotal);
-
-    const rowDesc = document.getElementById('row-desconto');
-    if (desconto > 0) {
-      rowDesc.style.display = '';
-      document.getElementById('desconto-display').textContent = '– ' + fmt(desconto);
-    } else {
-      rowDesc.style.display = 'none';
-    }
-
-    document.getElementById('total-display').textContent = fmt(total);
-
-    // Parcelas
-    const rowParc = document.getElementById('row-parcelas');
-    if (parcelas > 0 && total > 0) {
-      rowParc.style.display = '';
-      const valorParc = total / parcelas;
-      const sufixo = acrescimo > 0 ? ' com acréscimo' : ' sem juros';
-      document.getElementById('parcelas-texto').textContent = `${parcelas}x de ${fmt(valorParc)}${sufixo}`;
-    } else {
-      rowParc.style.display = 'none';
-    }
-  }
-
-  // ── SALVAR ──
-  function salvarOrcamento() {
-    const hist = JSON.parse(localStorage.getItem('orcamentos') || '[]');
-    const numero = document.getElementById('orc-numero').textContent;
-    const cliente = document.getElementById('cli-nome').value || 'Cliente não informado';
-    const total = document.getElementById('total-display').textContent;
-    const data = document.getElementById('data-emissao').value;
-
-    // Coleta itens
-    const itens = [];
-    document.querySelectorAll('#itens-body tr').forEach(tr => {
-      const inputs = tr.querySelectorAll('input');
-      itens.push({
-        descricao: inputs[0]?.value || '',
-        quantidade: inputs[1]?.value || '1',
-        valorUnitario: inputs[2]?.value || '0',
-        obs: inputs[3]?.value || ''
-      });
-    });
-
-    const dados = {
-      numero, cliente, total, data,
-      cnpj: document.getElementById('cli-cnpj').value,
-      responsavel: document.getElementById('cli-resp').value,
-      cond: document.getElementById('cond-pag').value,
-      prevEntrega: document.getElementById('prev-entrega').value,
-      localEntrega: document.getElementById('local-entrega').value,
-      obs: document.getElementById('obs').value,
-      desconto: document.getElementById('valor-desconto').value,
-      tipoDesconto: document.getElementById('tipo-desconto').value,
-      itens,
-      timestamp: Date.now()
-    };
-
-    // Atualiza se já existe, senão adiciona
-    const idx = hist.findIndex(h => h.numero === numero);
-    if (idx >= 0) hist[idx] = dados;
-    else hist.unshift(dados);
-
-    localStorage.setItem('orcamentos', JSON.stringify(hist));
-    mostrarToast('✓ Orçamento salvo com sucesso!');
-  }
-
-  // ── CARREGAR ──
-  function carregarOrcamento(dados) {
-    document.getElementById('orc-numero').textContent = dados.numero;
-    document.getElementById('cli-nome').value = dados.cliente;
-    document.getElementById('cli-cnpj').value = dados.cnpj || '';
-    document.getElementById('cli-resp').value = dados.responsavel || '';
-    document.getElementById('data-emissao').value = dados.data;
-    document.getElementById('cond-pag').value = dados.cond || 'avista';
-    document.getElementById('prev-entrega').value = dados.prevEntrega || 'Imediato';
-    document.getElementById('local-entrega').value = dados.localEntrega || 'Uberlândia - MG';
-    document.getElementById('obs').value = dados.obs || '';
-    document.getElementById('valor-desconto').value = dados.desconto || '0';
-    document.getElementById('tipo-desconto').value = dados.tipoDesconto || 'reais';
-
-    // Limpa e recarrega itens
-    document.getElementById('itens-body').innerHTML = '';
-    contadorId = 0;
-    (dados.itens || []).forEach(item => {
-      adicionarItem();
-      const rows = document.querySelectorAll('#itens-body tr');
-      const last = rows[rows.length - 1];
-      const inputs = last.querySelectorAll('input');
-      inputs[0].value = item.descricao;
-      inputs[1].value = item.quantidade;
-      inputs[2].value = item.valorUnitario;
-      if (inputs[3]) inputs[3].value = item.obs || '';
-    });
-    calcular();
-    verOrcamento();
-  }
-
-  // ── NOVO ──
-  function novoOrcamento() {
-    if (!confirm('Criar novo orçamento? O atual não salvo será perdido.')) return;
-    document.getElementById('itens-body').innerHTML = '';
-    contadorId = 0;
-    document.getElementById('cli-nome').value = '';
-    document.getElementById('cli-cnpj').value = '';
-    document.getElementById('cli-resp').value = '';
-    document.getElementById('valor-desconto').value = '0';
-    document.getElementById('cond-pag').value = 'avista';
-    document.getElementById('prev-entrega').value = 'Imediato';
-    document.getElementById('local-entrega').value = 'Uberlândia - MG';
-    document.getElementById('orc-numero').textContent = gerarNumero();
-    adicionarItem();
-    calcular();
-  }
-
-  // ── HISTÓRICO ──
-  function verHistorico() {
-    document.getElementById('tela-orcamento').style.display = 'none';
-    document.getElementById('tela-historico').style.display = 'block';
-    renderHistorico();
-  }
-
-  function verOrcamento() {
-    document.getElementById('tela-historico').style.display = 'none';
-    document.getElementById('tela-orcamento').style.display = 'block';
-  }
-
-  function renderHistorico() {
-    const hist = JSON.parse(localStorage.getItem('orcamentos') || '[]');
-    const lista = document.getElementById('lista-historico');
-    if (hist.length === 0) {
-      lista.innerHTML = '<div class="empty-hist">📭 Nenhum orçamento salvo ainda.</div>';
-      return;
-    }
-    lista.innerHTML = hist.map((h, i) => `
-      <div class="hist-card">
-        <div class="hist-info">
-          <h3>${h.numero} — ${h.cliente}</h3>
-          <p>📅 ${h.data} &nbsp;|&nbsp; 💰 ${h.total}</p>
-        </div>
-        <div class="hist-actions">
-          <span class="hist-badge">${h.total}</span>
-          <button class="btn btn-blue btn-sm" onclick='carregarOrcamento(${JSON.stringify(h)})'>✏️ Abrir</button>
-          <button class="btn btn-red btn-sm" onclick="excluirOrcamento(${i})">🗑️</button>
-        </div>
-      </div>
-    `).join('');
-  }
-
-  function excluirOrcamento(idx) {
-    if (!confirm('Excluir este orçamento?')) return;
-    const hist = JSON.parse(localStorage.getItem('orcamentos') || '[]');
-    hist.splice(idx, 1);
-    localStorage.setItem('orcamentos', JSON.stringify(hist));
-    renderHistorico();
-  }
-
-  // ── TOAST ──
-  function mostrarToast(msg) {
-    const t = document.getElementById('toast');
-    t.textContent = msg;
-    t.style.display = 'block';
-    setTimeout(() => t.style.display = 'none', 2500);
-  }
-
-  // ── PRINT PREP ──
-  window.addEventListener('beforeprint', () => {
-    const obs = document.getElementById('obs').value;
-    const obsPrint = document.getElementById('obs-print');
-    obsPrint.innerHTML = obs.split('\n').filter(l => l.trim()).map(l => `<p style="margin:3px 0">• ${l}</p>`).join('');
-    obsPrint.style.display = 'block';
-  });
-  window.addEventListener('afterprint', () => {
-    document.getElementById('obs-print').style.display = 'none';
-  });
-
-  // ── INIT ──
-  adicionarItem();
-  calcular();
-</script>
+  <script src="script.js"></script>
 </body>
 </html>
