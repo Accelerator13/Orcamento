@@ -1,343 +1,282 @@
 /* ==========================================================================
-   1. CONFIGURAÇÕES GERAIS E RESET
+   CONFIGURAÇÕES GERAIS E ESTRUTURA DO CARD
    ========================================================================== */
-* { 
-  box-sizing: border-box; 
-  margin: 0; 
-  padding: 0; 
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background-color: #edf2f7;
+  color: #2d3748;
+  margin: 0;
+  padding: 40px 20px;
 }
 
-body { 
-  background: #dde1e7; 
-  font-family: 'Segoe UI', Arial, sans-serif; 
-  font-size: 13px; 
-  color: #1a202c; 
-  min-height: 100vh; 
-  padding: 24px;
+.card {
+  max-width: 950px;
+  margin: 0 auto;
+  background: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+  padding: 40px;
+  border: 1px solid #e2e8f0;
 }
 
-/* ==========================================================================
-   2. ESTRUTURA DE LAYOUT
-   ========================================================================== */
-#tela-orcamento { 
-  width: 100%;
+/* TOPBAR - BOTÕES DE AÇÃO */
+.topbar {
+  max-width: 1010px;
+  margin: 0 auto 20px auto;
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
 }
-
-/* Topbar de Ações */
-.topbar { 
-  max-width: 900px; 
-  margin: 0 auto 14px; 
-  display: flex; 
-  justify-content: space-between; 
-  align-items: center; 
+.topbar-left, .topbar-right {
+  display: flex;
+  gap: 10px;
 }
-
-.topbar-right { 
-  display: flex; 
-  gap: 10px; 
+.btn {
+  padding: 10px 16px;
+  border: none;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s;
 }
+.btn-gray { background-color: #fff; color: #4a5568; border: 1px solid #cbd5e0; }
+.btn-blue { background-color: #3182ce; color: #fff; }
+.btn-green { background-color: #38a169; color: #fff; }
+.btn:hover { opacity: 0.9; transform: translateY(-1px); }
 
-/* O Card Branco Principal */
-.card { 
-  max-width: 900px; 
-  margin: 0 auto; 
-  background: #fff; 
-  border-radius: 10px; 
-  box-shadow: 0 6px 32px rgba(0,0,0,0.13); 
-  overflow: hidden; 
+/* CABEÇALHO */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  border-bottom: 2px solid #edf2f7;
+  padding-bottom: 20px;
 }
-
-.body { 
-  padding: 26px 32px; 
-}
-
-/* ==========================================================================
-   3. CABEÇALHO E ELEMENTOS DE TEXTO
-   ========================================================================== */
-.header { 
-  display: flex; 
-  justify-content: space-between; 
-  align-items: center; 
-  padding: 10px 0 22px 0; 
-  border-bottom: 2px solid #e2e8f0; 
-}
-
 .logo-imagem {
-  height: 50px;      /* Altura ideal para o topo */
-  width: auto;        /* Mantém a proporção perfeita */
-  display: block;
-  object-fit: contain;
+  max-height: 55px;
+}
+.header-right {
+  text-align: right;
+}
+.orc-badge {
+  background-color: #ebf8ff;
+  color: #2b6cb0;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-weight: 700;
+  font-size: 14px;
 }
 
-.header-right { 
-  text-align: right; 
+/* NOVO: DESIGN DOS INPUTS EDITÁVEIS NO CABEÇALHO */
+.editable-contact {
+  margin-top: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+}
+.editable-contact input {
+  background: transparent !important;
+  border: 1px solid transparent !important;
+  color: #4a5568 !important;
+  font-size: 13px;
+  font-family: inherit;
+  text-align: right;
+  width: 290px;
+  padding: 2px 4px;
+  transition: all 0.2s ease;
+}
+.editable-contact input:hover {
+  border-color: #cbd5e0 !important;
+  border-style: dashed !important;
+  background-color: rgba(0, 0, 0, 0.02) !important;
+}
+.editable-contact input:focus {
+  outline: none !important;
+  border-color: #3182ce !important;
+  border-style: solid !important;
+  background-color: #ffffff !important;
+  color: #000000 !important;
 }
 
-.orc-badge { 
-  background: #2b6cb0; 
-  color: #fff; 
-  border-radius: 6px; 
-  padding: 6px 14px; 
-  font-size: 12px; 
-  font-weight: bold; 
-  margin-bottom: 6px; 
-  display: inline-block; 
-  letter-spacing: .04em; 
+/* CAIXA DO CLIENTE */
+.client-box {
+  background-color: #f7fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  padding: 20px;
+  margin: 20px 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 15px;
 }
+.client-box .field { display: flex; flex-direction: column; }
+.client-box label { font-size: 11px; font-weight: 700; color: #718096; text-transform: uppercase; margin-bottom: 6px; }
+.client-box input { padding: 8px 12px; border: 1px solid #cbd5e0; border-radius: 4px; font-size: 13px; }
 
-.header-right .contact { 
-  color: #555; 
-  font-size: 11.5px; 
-  line-height: 1.6; 
+/* SPINNER DO CNPJ */
+.spinner {
+  position: absolute; right: 10px; top: 28px;
+  width: 16px; height: 16px;
+  border: 2px solid #cbd5e0; border-top-color: #3182ce;
+  border-radius: 50%; animation: spin 0.6s linear infinite;
 }
+@keyframes spin { to { transform: rotate(360deg); } }
 
-.date-row { 
-  display: flex; 
-  align-items: center; 
-  gap: 8px; 
-  font-size: 13px; 
-  margin-bottom: 16px; 
-}
+/* TABELA DE PRODUTOS */
+table { width: 100%; border-collapse: collapse; margin: 20px 0; font-size: 13px; }
+th { background-color: #f7fafc; color: #4a5568; font-weight: 700; padding: 12px; text-align: left; border-bottom: 2px solid #e2e8f0; }
+td { padding: 10px 12px; border-bottom: 1px solid #edf2f7; background-color: #fff; }
+table input { width: 90%; padding: 6px; border: 1px solid #cbd5e0; border-radius: 4px; font-size: 13px; }
 
-.date-row input[type=text] {
-  border-bottom: 1px dotted #bbb !important;
-}
+.center { text-align: center; }
+.right { text-align: right; }
+th.center, td.center input { text-align: center; }
+th.right, td.right input { text-align: right; }
 
-.intro { 
-  color: #555; 
-  font-style: italic; 
-  margin-bottom: 14px; 
-}
+/* CONTROLES DE ORDENAÇÃO */
+.action-buttons { display: flex; gap: 4px; justify-content: center; }
+.btn-order { background: #edf2f7; border: 1px solid #cbd5e0; border-radius: 4px; padding: 2px 6px; cursor: pointer; font-size: 10px; }
+.btn-remove { background: #fff5f5; border: 1px solid #fed7d7; color: #e53e3e; border-radius: 4px; padding: 2px 6px; cursor: pointer; font-size: 10px; font-weight: bold; }
 
-/* Bloco do Cliente */
-.client-box { 
-  background: #f7f8fa; 
-  border: 1px solid #e2e8f0; 
-  border-radius: 8px; 
-  padding: 16px 20px; 
-  margin-bottom: 18px; 
-  display: grid; 
-  grid-template-columns: 1fr 1fr 1fr; 
-  gap: 16px; 
-}
+.btn-add { background: #edf2f7; border: 1px dashed #cbd5e0; color: #4a5568; padding: 10px; width: 100%; border-radius: 6px; font-weight: 600; cursor: pointer; margin-bottom: 20px; }
 
-.field label { 
-  display: block; 
-  font-size: 10px; 
-  font-weight: 700; 
-  color: #718096; 
-  text-transform: uppercase; 
-  letter-spacing: .06em; 
-  margin-bottom: 4px; 
-}
+/* RODAPÉ DA TABELA */
+tfoot td.gray { background-color: #f7fafc; font-weight: 600; color: #4a5568; text-align: right; border: 1px solid #e2e8f0; }
+tfoot td.val { font-weight: 600; color: #2d3748; text-align: right; border: 1px solid #e2e8f0; width: 150px; }
+tfoot td.big { font-size: 16px; color: #2b6cb0; font-weight: 700; }
+tfoot select { padding: 4px; width: 100%; border: 1px solid #cbd5e0; border-radius: 4px; font-size: 12px; }
+
+/* DESCONTO E OBSERVAÇÕES */
+.desconto-row { display: flex; align-items: center; gap: 10px; margin-bottom: 20px; background: #f7fafc; padding: 10px 15px; border-radius: 6px; border: 1px solid #e2e8f0; width: fit-content; }
+.desconto-row label { font-size: 12px; font-weight: 600; }
+.desconto-row select, .desconto-row input { padding: 5px; border: 1px solid #cbd5e0; border-radius: 4px; }
+.desconto-row input { width: 70px; }
+
+.obs-box { display: flex; flex-direction: column; margin-top: 25px; }
+.obs-label { font-size: 12px; font-weight: 700; color: #4a5568; margin-bottom: 8px; }
+.obs-box textarea { padding: 12px; border: 1px solid #cbd5e0; border-radius: 6px; font-size: 12px; font-family: inherit; line-height: 1.6; resize: vertical; color: #4a5568; background-color: #fcfcfc; }
+
+/* ASSINATURA */
+.signature-container { margin-top: 50px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
+.signature-line { width: 250px; border-bottom: 1px solid #718096; margin-bottom: 8px; }
+.signature-title { font-size: 12px; color: #4a5568; font-weight: 600; }
+
+/* NOVO: REGRA DAS LINHAS SOB ENCOMENDA */
+.linha-encomenda { background-color: #fff5f5 !important; }
+.linha-encomenda input { color: #c53030 !important; font-weight: 600; }
 
 /* ==========================================================================
-   4. TABELA DE ITENS E RODAPÉ (TRAVADO CONTRA QUEBRAS)
+   REGRAS ULTRA FORÇADAS PARA O MODO ESCURO (CORRIGIDO)
    ========================================================================== */
-table { 
-  width: 100%; 
-  border-collapse: collapse; 
-  margin-top: 15px;
+body.dark-theme {
+  background-color: #1a202c !important;
+  color: #e2e8f0 !important;
+}
+body.dark-theme .card {
+  background-color: #2d3748 !important;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3) !important;
+  border: 1px solid #4a5568 !important;
+}
+body.dark-theme #parcelas-detalhe {
+  color: #cbd5e0 !important;
 }
 
-thead tr { 
-  background: #1a202c; 
+/* Força cores certas nas linhas de encomenda do Modo Dark */
+body.dark-theme .linha-encomenda { background-color: #742a2a !important; }
+body.dark-theme .linha-encomenda input { color: #fed7d7 !important; }
+
+/* Corrige falha de cor de fundo nas linhas e células da tabela */
+body.dark-theme table,
+body.dark-theme tr,
+body.dark-theme tbody tr,
+body.dark-theme #tabela-produtos tr {
+  background-color: #2d3748 !important;
+}
+body.dark-theme td {
+  background-color: transparent !important;
+  color: #e2e8f0 !important;
+  border-bottom: 1px solid #4a5568 !important;
 }
 
-/* Definição fluida das colunas principais */
-thead th:nth-child(1) { width: 35%; } /* ITEM */
-thead th:nth-child(2) { width: 8%; }  /* QTD */
-thead th:nth-child(3) { width: 14%; } /* VALOR UNIT. */
-thead th:nth-child(4) { width: 25%; } /* OBS. DO ITEM */
-thead th:nth-child(5) { width: 13%; } /* SUB TOTAL */
-thead th:nth-child(6) { width: 5%; }  /* X */
-
-thead th { 
-  color: #fff; 
-  padding: 10px 12px; 
-  font-size: 11.5px; 
-  font-weight: 700; 
-  letter-spacing: .05em; 
-  text-align: left; 
+/* Todos os inputs e selects escurecidos */
+body.dark-theme input[type="text"],
+body.dark-theme input[type="number"],
+body.dark-theme textarea,
+body.dark-theme select,
+body.dark-theme table input {
+  background-color: #1a202c !important;
+  color: #ffffff !important;
+  border: 1px solid #4a5568 !important;
+}
+body.dark-theme th {
+  background-color: #1a202c !important;
+  color: #ffffff !important;
+  border-bottom: 2px solid #4a5568 !important;
 }
 
-thead th.center, td.center { text-align: center; }
-thead th.right, td.right { text-align: right; }
-
-tbody tr:nth-child(even) { background: #f9fafb; }
-tbody tr:nth-child(odd) { background: #fff; }
-
-tbody td { 
-  padding: 8px 12px; 
-  border-bottom: 1px solid #e2e8f0; 
-  vertical-align: middle; 
+/* Células de rodapé consertadas */
+body.dark-theme table tfoot tr td,
+body.dark-theme tfoot td {
+  background-color: #1a202c !important;
+  color: #e2e8f0 !important;
+  border: 1px solid #4a5568 !important;
 }
-
-/* Ajuste Fixo e Seguro para as Colunas do Rodapé */
-tfoot td { 
-  padding: 6px 12px; 
-  border-bottom: 1px solid #e2e8f0; 
+body.dark-theme #subtotal-display,
+body.dark-theme tfoot td.val {
+  background-color: #2d3748 !important;
+  color: #ffffff !important;
 }
-
-tfoot td.gray { 
-  background: #f1f3f6; 
-  text-align: right; 
-  font-weight: 700; 
-  font-size: 12px; 
-  color: #4a5568; 
-  white-space: nowrap;  /* Bloqueia a quebra de texto das palavras */
-  width: 150px;         /* Força a largura ideal para "Local de Fat. / Entrega" */
-  min-width: 150px;
-  border-left: 1px solid #e2e8f0;
-  border-right: 1px solid #e2e8f0;
-}
-
-tfoot td.val { 
-  text-align: right; 
-  font-weight: 600; 
-  width: 130px;         /* Força a largura ideal para os valores e selects */
-  min-width: 130px;
-  border-right: 1px solid #e2e8f0;
-}
-
-tfoot td.val.big { 
-  font-size: 15px; 
-  font-weight: 800; 
-  color: #2b6cb0; 
-}
-
-tfoot td.val.green { 
-  color: #276749; 
-}
-
-/* ==========================================================================
-   5. FORMULÁRIOS E INPUTS
-   ========================================================================== */
-input[type=text], input[type=number] {
-  border: none; 
-  border-bottom: 1.5px dashed #bbb; 
-  background: transparent;
-  font-size: 13px; 
-  font-family: inherit; 
-  color: #1a202c;
-  outline: none; 
-  padding: 3px 2px; 
-  width: 100%; 
-}
-
-input[type=text]:focus, input[type=number]:focus { 
-  border-bottom-color: #2b6cb0; 
-}
-
-select { 
-  border: 1px solid #cbd5e0; 
-  border-radius: 5px; 
-  background: #fff; 
-  font-size: 12px; 
-  font-family: inherit; 
-  padding: 4px 6px; 
-  outline: none; 
-  cursor: pointer; 
-  width: 100%;
-}
-
-textarea { 
-  border: 1px dashed #bbb; 
-  border-radius: 5px; 
-  background: transparent; 
-  font-family: inherit; 
-  font-size: 12px; 
-  color: #555; 
-  outline: none; 
-  padding: 10px; 
-  width: 100%; 
-  resize: vertical; 
-  line-height: 1.6; 
-}
-
-/* Elementos de Ação Inferiores */
-.desconto-row { 
-  display: flex; 
-  align-items: center; 
-  gap: 10px; 
-  margin: 20px 0 10px; 
-}
-
-.desconto-row label { 
-  font-size: 12px; 
-  font-weight: 600; 
-  color: #555; 
-}
-
-.desconto-row select { width: auto; }
-.desconto-row input { width: 90px; }
-
-.btn-add { 
-  background: none; 
-  border: 2px dashed #2b6cb0; 
-  color: #2b6cb0; 
-  border-radius: 7px; 
-  font-weight: 700; 
-  font-size: 13px; 
-  cursor: pointer; 
-  padding: 8px 16px; 
-  margin-bottom: 20px; 
-  transition: all .15s; 
-}
-
-.btn-add:hover { background: #ebf4ff; }
-
-.btn-remove { 
-  background: none; 
-  border: none; 
-  color: #cbd5e0; 
-  cursor: pointer; 
-  font-size: 14px; 
-}
-.btn-remove:hover { color: #e53e3e; }
-
-/* Botões Superiores */
-.btn { 
-  border: none; 
-  border-radius: 6px; 
-  padding: 8px 16px; 
-  font-size: 13px; 
+body.dark-theme #total-display { 
+  background-color: #2d3748 !important;
+  color: #63b3ed !important; 
   font-weight: bold; 
-  cursor: pointer; 
-  display: flex; 
-  align-items: center; 
-  gap: 6px; 
+}
+body.dark-theme #desconto-display { 
+  background-color: #2d3748 !important;
+  color: #68d391 !important; 
+}
+body.dark-theme ::placeholder {
+  color: #718096 !important;
+  opacity: 1;
 }
 
-.btn-blue { background: #2b6cb0; color: #fff; }
-.btn-blue:hover { background: #2c5282; }
-.btn-green { background: #276749; color: #fff; }
-.btn-green:hover { background: #1e4d35; }
-.btn-gray { background: #edf2f7; color: #4a5568; border: 1px solid #cbd5e0; }
-.btn-gray:hover { background: #e2e8f0; }
+/* Caixas e labels adicionais em Modo Dark */
+body.dark-theme .client-box { background-color: #1a202c !important; border-color: #4a5568 !important; }
+body.dark-theme .client-box label,
+body.dark-theme .desconto-row label,
+body.dark-theme .obs-label,
+body.dark-theme .intro,
+body.dark-theme .date-row strong { color: #cbd5e0 !important; }
+body.dark-theme .signature-title { color: #a0aec0 !important; }
 
-.obs-box { 
-  border-top: 1px solid #e2e8f0; 
-  padding-top: 16px; 
-  margin-top: 20px; 
-}
-
-.obs-label { 
-  font-size: 10px; 
-  font-weight: 700; 
-  color: #718096; 
-  text-transform: uppercase; 
-  letter-spacing: .06em; 
-  margin-bottom: 6px; 
-  display: block; 
-}
+/* Cabeçalho editável em Modo Dark */
+body.dark-theme .editable-contact input { color: #cbd5e0 !important; }
+body.dark-theme .editable-contact input:hover { border-color: #4a5568 !important; background-color: rgba(255, 255, 255, 0.05) !important; }
+body.dark-theme .editable-contact input:focus { background-color: #1a202c !important; border-color: #63b3ed !important; color: #ffffff !important; }
 
 /* ==========================================================================
-   6. REGRAS DE IMPRESSÃO
+   REGRAS DE IMPRESSÃO (PDF LIMPO)
    ========================================================================== */
 @media print {
-  body { background: white; padding: 0; }
   .no-print { display: none !important; }
-  .card { box-shadow: none !important; border-radius: 0 !important; max-width: 100%; }
-  input[type=text], input[type=number], select, textarea { border: none !important; background: transparent !important; padding: 0 !important; }
+  body, .dark-theme body { background-color: #ffffff !important; color: #000000 !important; padding: 0; }
+  .card, .dark-theme .card { box-shadow: none !important; border: none !important; padding: 0; max-width: 100%; }
+  
+  .linha-encomenda { background-color: transparent !important; }
+  .linha-encomenda input { color: #000000 !important; }
+  
+  body.dark-theme table, body.dark-theme tr, body.dark-theme tbody tr, body.dark-theme #tabela-produtos tr, body.dark-theme td {
+    background-color: transparent !important; color: #000000 !important;
+  }
+  input, textarea, select, table input, body.dark-theme input, body.dark-theme textarea, body.dark-theme table input {
+    border: none !important; background: transparent !important; color: #000000 !important; padding: 4px 0; -webkit-appearance: none;
+  }
+  th { background-color: #f1f5f9 !important; color: #000000 !important; border-bottom: 2px solid #cbd5e0 !important; }
+  tfoot td.gray { background-color: #f1f5f9 !important; color: #000000 !important; }
+  tfoot td.val, body.dark-theme tfoot td.val { background-color: transparent !important; color: #000000 !important; }
+  #parcelas-detalhe { color: #000000 !important; }
+  .editable-contact input { border: none !important; background: transparent !important; color: #000000 !important; padding: 0 !important; }
+  .signature-container { margin-top: 80px; }
 }

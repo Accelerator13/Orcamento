@@ -8,6 +8,7 @@
 </head>
 <body>
 
+  <!-- Barra de Ações Superior -->
   <div class="topbar no-print">
     <div class="topbar-left">
       <button class="btn btn-gray" onclick="window.location.reload()">
@@ -16,10 +17,17 @@
       <button class="btn btn-gray">
         + Novo Orçamento
       </button>
+      <button class="btn btn-gray" onclick="alternarModoEscuro()" id="btn-dark-mode">
+        🌙 Modo Escuro
+      </button>
+      <!-- NOVO: Botão Limpar Tudo -->
+      <button class="btn btn-gray" style="background-color: #e53e3e; color: white;" onclick="limparOrcamento()">
+        🧹 Limpar Campos
+      </button>
     </div>
     <div class="topbar-right">
-      <button class="btn btn-green">
-        💾 Salvar Rascunho
+      <button class="btn btn-green" onclick="enviarWhatsApp()">
+        💬 Enviar p/ WhatsApp
       </button>
       <button class="btn btn-blue" onclick="window.print()">
         🖨️ Imprimir / PDF
@@ -27,36 +35,41 @@
     </div>
   </div>
 
+  <!-- Card Principal do Orçamento -->
   <div id="tela-orcamento" class="card">
     <div class="body">
       
+      <!-- Cabeçalho com o Novo Logo -->
       <div class="header">
         <div class="header-left">
           <img src="logo.png" alt="Online Shopping" class="logo-imagem" />
         </div>
         <div class="header-right">
-          <span class="orc-badge">ORC-2026-001</span>
-          <div class="contact">
-            AV. João Pinheiro, 796 - Centro<br>
-            Uberlândia / Uberaba ☎ (34) 3228-0115<br>
-            www.onlineshopping.com.br
+          <span class="orc-badge" id="num-orcamento">ORC-2026-001</span>
+          <div class="contact editable-contact">
+            <input type="text" id="header-endereco" value="AV. João Pinheiro, 796 - Centro" placeholder="Endereço da loja" />
+            <input type="text" id="header-telefone" value="Uberlândia / Uberaba ☎ (34) 3228-0115" placeholder="Telefone / Filial" />
+            <input type="text" id="header-site" value="www.onlineshopping.com.br" placeholder="Site da empresa" />
           </div>
         </div>
       </div>
 
+      <!-- Data e Local AUTOMÁTICA -->
       <div class="date-row" style="margin-top: 20px;">
         <strong>Uberlândia-MG,</strong>
-        <input type="text" id="data-orcamento" value="16 de Junho de 2026" style="width: 150px;" />
+        <input type="text" id="data-orcamento" value="" style="width: 210px;" />
       </div>
 
+      <!-- Dados do Cliente -->
       <div class="client-box">
+        <div class="field" style="position: relative;">
+          <label>CNPJ (Digite apenas números)</label>
+          <input type="text" id="cliente-cnpj" placeholder="Ex: 04388540000498" onblur="buscarCNPJ()" />
+          <div id="cnpj-spinner" class="spinner" style="display: none;"></div>
+        </div>
         <div class="field">
           <label>Orçamento Para</label>
           <input type="text" id="cliente-nome" placeholder="Nome do cliente / empresa" />
-        </div>
-        <div class="field">
-          <label>CNPJ / CPF</label>
-          <input type="text" id="cliente-documento" placeholder="00.000.000/0001-00" />
         </div>
         <div class="field">
           <label>Responsável pela Informação</label>
@@ -66,6 +79,7 @@
 
       <p class="intro">Conforme solicitação estamos enviando nossos melhores preços:</p>
 
+      <!-- Tabela de Itens -->
       <table>
         <thead>
           <tr>
@@ -74,13 +88,13 @@
             <th class="right">VALOR UNIT.</th>
             <th>OBS. DO ITEM</th>
             <th class="right">SUB TOTAL</th>
-            <th class="no-print" style="width: 40px;"></th>
+            <th class="no-print" style="width: 80px;"></th>
           </tr>
         </thead>
         <tbody id="tabela-produtos">
           <tr>
             <td>
-              <input type="text" placeholder="Descrição do produto" value="Descrição do produto" />
+              <input type="text" class="prod-nome" placeholder="Descrição do produto" value="Descrição do produto" />
             </td>
             <td class="center">
               <input type="number" class="center" value="1" style="width: 50px;" oninput="calcular()" />
@@ -89,11 +103,16 @@
               <input type="text" class="right" value="0.00" style="width: 80px;" oninput="calcular()" />
             </td>
             <td>
-              <input type="text" placeholder="Ex: sob encomenda..." value="Ex: sob encomenda..." />
+              <!-- MUDADO: adicionado evento oninput para monitorar o termo "sob encomenda" -->
+              <input type="text" class="prod-obs" placeholder="Ex: sob encomenda..." value="Ex: sob encomenda..." oninput="calcular()" />
             </td>
             <td class="right" style="color: #2b6cb0; font-weight: 600;">R$ 0,00</td>
             <td class="center no-print">
-              <button class="btn-remove">✕</button>
+              <div class="action-buttons">
+                <button class="btn-order" onclick="moverParaCima(this)">▲</button>
+                <button class="btn-order" onclick="moverParaBaixo(this)">▼</button>
+                <button class="btn-remove">✕</button>
+              </div>
             </td>
           </tr>
         </tbody>
@@ -118,20 +137,16 @@
             <td class="gray">Cond. Pagmt</td>
             <td class="val">
               <select id="cond-pag" onchange="calcular()">
-                <option value="avista">À vista (Dinheiro / Pix)</option>
-                <option value="2x">2x sem juros no cartão</option>
-                <option value="3x">3x sem juros no cartão</option>
-                <option value="6x">6x no cartão (5% acréscimo)</option>
-                <option value="10x">10x no cartão (8% acréscimo)</option>
-                <option value="boleto">Boleto bancário</option>
-                <option value="outro">Outro</option>
+                <option value="À vista (Dinheiro / Pix)">À vista (Dinheiro / Pix)</option>
+                <option value="2x sem juros no cartão">2x sem juros no cartão</option>
+                <option value="3x sem juros no cartão">3x sem juros no cartão</option>
+                <option value="6x no cartão (5% acréscimo)">6x no cartão (5% acréscimo)</option>
+                <option value="10x no cartão (8% acréscimo)">10x no cartão (8% acréscimo)</option>
+                <option value="Boleto bancário">Boleto bancário</option>
+                <option value="Outro">Outro</option>
               </select>
-            </td>
-          </tr>
-          <tr id="row-parcelas" style="display:none">
-            <td colspan="5" class="no-print"></td>
-            <td colspan="2" style="text-align:right;">
-              <span id="parcelas-texto" style="font-size:12px; color:#276749; font-weight:600; font-style:italic;"></span>
+              <!-- NOVO: Detalhamento do parcelamento -->
+              <div id="parcelas-detalhe" style="font-size: 11px; margin-top: 4px; color: #4a5568; font-weight: 600; text-align: right;"></div>
             </td>
           </tr>
           <tr>
@@ -147,6 +162,7 @@
         </tfoot>
       </table>
 
+      <!-- Controles de Desconto -->
       <div class="desconto-row no-print">
         <label>Desconto:</label>
         <select id="tipo-desconto" onchange="calcular()">
@@ -154,15 +170,17 @@
           <option value="porcento">% (porcentagem)</option>
         </select>
         <input type="number" id="valor-desconto" value="0" oninput="calcular()" />
+        <span style="font-size: 11px; color: #718096;">(Máx. 20%)</span>
       </div>
 
       <button class="btn-add no-print" id="btn-adicionar-produto">
         + Adicionar Produto
       </button>
 
-     <div class="obs-box">
+      <!-- Observações Gerais -->
+      <div class="obs-box">
         <label class="obs-label">Observações / Condições Gerais</label>
-        <textarea placeholder="Termos do orçamento..." style="height: 180px;">• Para emissão da ordem de compra considerar nosso CNPJ 04.388.540/0004-98;
+        <textarea id="obs-gerais" placeholder="Termos do orçamento..." style="height: 180px;">• Para emissão da ordem de compra considerar nosso CNPJ 04.388.540/0004-98;
 • Valor e prazo de entrega sujeito a alteração de acordo com a disponibilidade no fornecedor;
 • Prazo de entrega se aplica nos itens em vermelho;
 • Itens em vermelho não conseguimos devolução, pois é sob encomenda apenas pra sua compra;
@@ -170,6 +188,12 @@
 • Valor mínimo para faturamento boleto R$ 150,00;
 • Valor mínimo para entrega CIF (Grátis) em Uberlândia-MG de R$ 500,00.
 • Em Casos de compra de produtos específicos com os nossos fornecedores para cumprir a demanda do cliente, de produtos cotados que não temos em nossos estoques, não aceitamos troca e nem devolução do mesmo. Favor avaliar e validar antes este orçamento com o seu departamento de TI ou áreas afins.</textarea>
+      </div>
+
+      <!-- Área Elegante de Assinatura no Rodapé -->
+      <div class="signature-container">
+        <div class="signature-line"></div>
+        <p class="signature-title">Responsável Comercial - Online Shopping</p>
       </div>
 
     </div>
