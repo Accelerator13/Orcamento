@@ -1,4 +1,25 @@
 // ==========================================================================
+// CONFIGURAÇÃO / ENUM DE OPÇÕES DE PAGAMENTO (Centralizado para fácil manutenção)
+// ==========================================================================
+const OPCOES_PAGAMENTO = {
+  "vista":    { acrescimo: 0.00, texto: "Pagamento único sem acréscimo", parcelas: 1 },
+  "1x_juros": { acrescimo: 0.00, texto: "1x no cartão", parcelas: 1 },
+  "2x_juros":   { acrescimo: 0.00, texto: "2x no cartão", parcelas: 2 },
+  "3x_juros":   { acrescimo: 0.00, texto: "3x no cartão", parcelas: 3 },
+  "4x_juros":   { acrescimo: 0.00, texto: "4x no cartão", parcelas: 4 },
+  "5x_juros":   { acrescimo: 0.00, texto: "5x no cartão", parcelas: 5 },
+  "6x_juros": { acrescimo: 0.05, texto: "6x no cartão", parcelas: 6 },
+  "7x_juros":{ acrescimo: 0.06, texto: "7x no cartão", parcelas: 7 },
+  "8x_juros":{ acrescimo: 0.07, texto: "8x no cartão", parcelas: 8 },
+  "9x_juros":{ acrescimo: 0.075, texto: "9x no cartão", parcelas: 9 },
+  "10x_juros":{ acrescimo: 0.08, texto: "10x no cartão", parcelas: 10 },
+  "11x_juros":{ acrescimo: 0.09, texto: "11x no cartão", parcelas: 11 },
+  "12x_juros":{ acrescimo: 0.10, texto: "12x no cartão", parcelas: 12 },
+  "boleto":   { acrescimo: 0.00, texto: "Pagamento único sem acréscimo", parcelas: 1 },
+  "outro":    { acrescimo: 0.00, texto: "", parcelas: 1 }
+};
+
+// ==========================================================================
 // 1. FUNÇÃO PRINCIPAL DE CÁLCULO, JUROS E DESTAQUE DE ENCOMENDA
 // ==========================================================================
 function calcular() {
@@ -78,34 +99,29 @@ function calcular() {
 
   let totalGeral = subtotalGeral - totalDesconto;
 
-  // CÁLCULO DE PARCELAS E ACRÉSCIMOS DO CARTÃO
-  const condPagamento = document.getElementById("cond-pag").value;
+  // APLICANDO A DICA: Busca a configuração no nosso "Enum/Objeto" através do value do select
+  const chavePagamento = document.getElementById("cond-pag").value;
   const areaParcelas = document.getElementById("parcelas-detalhe");
-  let textoParcela = "";
+  
+  // Confere se a chave existe no nosso Enum para não quebrar
+  if (OPCOES_PAGAMENTO[chavePagamento]) {
+    const config = OPCOES_PAGAMENTO[chavePagamento];
+    
+    // Aplica o acréscimo de juros (se houver) cadastrado no Enum
+    if (config.acrescimo > 0) {
+      totalGeral = totalGeral * (1 + config.acrescimo);
+    }
 
-  switch (condPagamento) {
-    case "À vista (Dinheiro / Pix)":
-    case "Boleto bancário":
-      textoParcela = "Pagamento único sem acréscimo";
-      break;
-    case "2x sem juros no cartão":
-      textoParcela = `2x de ${(totalGeral / 2).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })} sem juros`;
-      break;
-    case "3x sem juros no cartão":
-      textoParcela = `3x de ${(totalGeral / 3).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })} sem juros`;
-      break;
-    case "6x no cartão (5% acréscimo)":
-      totalGeral = totalGeral * 1.05; 
-      textoParcela = `6x de ${(totalGeral / 6).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })} c/ acréscimo`;
-      break;
-    case "10x no cartão (8% acréscimo)":
-      totalGeral = totalGeral * 1.08; 
-      textoParcela = `10x de ${(totalGeral / 10).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })} c/ acréscimo`;
-      break;
-    default:
-      textoParcela = "";
+    // Monta o texto dinâmico das parcelas baseado no Enum
+    if (chavePagamento === "vista" || chavePagamento === "boleto") {
+      areaParcelas.textContent = config.texto;
+    } else if (chavePagamento === "outro") {
+      areaParcelas.textContent = "";
+    } else {
+      const valorParcela = totalGeral / config.parcelas;
+      areaParcelas.textContent = `${config.parcelas}x de ${valorParcela.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })} ${config.texto}`;
+    }
   }
-  areaParcelas.textContent = textoParcela;
 
   document.getElementById("total-display").textContent = totalGeral.toLocaleString('pt-BR', {
     style: 'currency',
@@ -153,14 +169,17 @@ function enviarWhatsApp() {
   const numOrcamento = document.getElementById("num-orcamento").textContent;
   const nomeCliente = document.getElementById("cliente-nome").value || "Cliente";
   const totalGeral = document.getElementById("total-display").textContent;
-  const condPagamento = document.getElementById("cond-pag").value;
+  
+  // Pega o texto visível selecionado para mandar pro whats antigo funcionar idêntico
+  const selectPag = document.getElementById("cond-pag");
+  const condPagamentoTexto = selectPag.options[selectPag.selectedIndex].text;
   const detalheParcela = document.getElementById("parcelas-detalhe").textContent;
 
   const linhas = document.querySelectorAll("#tabela-produtos tr");
   let itensTexto = "";
   
   linhas.forEach((linha) => {
-    const inputNome = WebL = linha.querySelector(".prod-nome");
+    const inputNome = linha.querySelector(".prod-nome");
     const inputQtd = linha.querySelector("input[type='number']");
     if (inputNome && inputNome.value) {
       itensTexto += `*${inputQtd.value}x* ${inputNome.value}\n`;
@@ -171,7 +190,7 @@ function enviarWhatsApp() {
     `Olá, *${nomeCliente}*! Segue o resumo do seu orçamento:\n\n` +
     `📄 *Código:* ${numOrcamento}\n` +
     `🛍️ *Itens:*\n${itensTexto}\n` +
-    `💳 *Forma de Pagamento:* ${condPagamento} (${detalheParcela})\n` +
+    `💳 *Forma de Pagamento:* ${condPagamentoTexto} (${detalheParcela})\n` +
     `💰 *VALOR TOTAL FINAL:* ${totalGeral}\n\n` +
     `O PDF completo com os termos de faturamento e CNPJ já está pronto. Como deseja recebê-lo?`;
 
@@ -214,12 +233,10 @@ function limparOrcamento() {
     document.getElementById("cond-pag").selectedIndex = 0;
     document.getElementById("prev-entrega").value = "Imediato";
     
-    // Restaura o cabeçalho padrão da loja caso tenha sido editado
     document.getElementById("header-endereco").value = "AV. João Pinheiro, 796 - Centro";
     document.getElementById("header-telefone").value = "Uberlândia / Uberaba ☎ (34) 3228-0115";
     document.getElementById("header-site").value = "www.onlineshopping.com.br";
     
-    // Deixa uma linha limpa padrão na tabela
     const tbody = document.getElementById("tabela-produtos");
     tbody.innerHTML = `
       <tr>

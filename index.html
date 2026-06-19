@@ -137,13 +137,21 @@
             <td class="gray">Cond. Pagmt</td>
             <td class="val">
               <select id="cond-pag" onchange="calcular()">
-                <option value="À vista (Dinheiro / Pix)">À vista (Dinheiro / Pix)</option>
-                <option value="2x sem juros no cartão">2x sem juros no cartão</option>
-                <option value="3x sem juros no cartão">3x sem juros no cartão</option>
-                <option value="6x no cartão (5% acréscimo)">6x no cartão (5% acréscimo)</option>
-                <option value="10x no cartão (8% acréscimo)">10x no cartão (8% acréscimo)</option>
-                <option value="Boleto bancário">Boleto bancário</option>
-                <option value="Outro">Outro</option>
+                <option value="vista">À vista (Dinheiro / Pix)</option>
+                <option value="1x_juros">1x no cartão</option>
+                <option value="2x_juros">2x no cartão</option>
+                <option value="3x_juros">3x no cartão</option>
+                <option value="4x_juros">4x no cartão</option>
+                <option value="5x_juros">5x no cartão</option>
+                <option value="6x_juros">6x no cartão</option>
+                <option value="7x_juros">7x no cartão</option>
+                <option value="8x_juros">8x no cartão</option>
+                <option value="9x_juros">9x no cartão</option>
+                <option value="10x_juros">10x no cartão</option>
+                <option value="11x_juros">11x no cartão</option>
+                <option value="12x_juros">12x no cartão</option>
+                <option value="boleto">Boleto bancário</option>
+                <option value="outro">Outro</option>
               </select>
               <!-- NOVO: Detalhamento do parcelamento -->
               <div id="parcelas-detalhe" style="font-size: 11px; margin-top: 4px; color: #4a5568; font-weight: 600; text-align: right;"></div>
