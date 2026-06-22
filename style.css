@@ -1,5 +1,5 @@
 /* ==========================================================================
-   CONFIGURAÇÕES GERAIS E ESTRUTURA DO CARD
+   FOLHA DE ESTILOS DA ESTRUTURA GERAL
    ========================================================================== */
 body {
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -19,7 +19,7 @@ body {
   border: 1px solid #e2e8f0;
 }
 
-/* TOPBAR - BOTÕES DE AÇÃO */
+/* TOPBAR - BOTÕES DE CONTROLE */
 .topbar {
   max-width: 1010px;
   margin: 0 auto 20px auto;
@@ -27,18 +27,10 @@ body {
   justify-content: space-between;
   gap: 10px;
 }
-.topbar-left, .topbar-right {
-  display: flex;
-  gap: 10px;
-}
+.topbar-left, .topbar-right { display: flex; gap: 10px; }
 .btn {
-  padding: 10px 16px;
-  border: none;
-  border-radius: 6px;
-  font-weight: 600;
-  font-size: 13px;
-  cursor: pointer;
-  transition: all 0.2s;
+  padding: 10px 16px; border: none; border-radius: 6px;
+  font-weight: 600; font-size: 13px; cursor: pointer; transition: all 0.2s;
 }
 .btn-gray { background-color: #fff; color: #4a5568; border: 1px solid #cbd5e0; }
 .btn-blue { background-color: #3182ce; color: #fff; }
@@ -46,109 +38,59 @@ body {
 .btn:hover { opacity: 0.9; transform: translateY(-1px); }
 
 /* CABEÇALHO */
-.header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  border-bottom: 2px solid #edf2f7;
-  padding-bottom: 20px;
-}
-.logo-imagem {
-  max-height: 55px;
-}
-.header-right {
-  text-align: right;
-}
-.orc-badge {
-  background-color: #ebf8ff;
-  color: #2b6cb0;
-  padding: 6px 12px;
-  border-radius: 20px;
-  font-weight: 700;
-  font-size: 14px;
-}
+.header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #edf2f7; padding-bottom: 20px; }
+.logo-imagem { max-height: 55px; object-fit: contain; }
+.header-right { text-align: right; }
+.orc-badge { background-color: #ebf8ff; color: #2b6cb0; padding: 6px 12px; border-radius: 20px; font-weight: 700; font-size: 14px; }
 
-/* NOVO: DESIGN DOS INPUTS EDITÁVEIS NO CABEÇALHO */
-.editable-contact {
-  margin-top: 12px;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 2px;
-}
+.editable-contact { margin-top: 12px; display: flex; flex-direction: column; align-items: flex-end; gap: 2px; }
 .editable-contact input {
-  background: transparent !important;
-  border: 1px solid transparent !important;
-  color: #4a5568 !important;
-  font-size: 13px;
-  font-family: inherit;
-  text-align: right;
-  width: 290px;
-  padding: 2px 4px;
-  transition: all 0.2s ease;
+  background: transparent !important; border: 1px solid transparent !important; color: #4a5568 !important;
+  font-size: 13px; text-align: right; width: 290px; padding: 2px 4px;
 }
-.editable-contact input:hover {
-  border-color: #cbd5e0 !important;
-  border-style: dashed !important;
-  background-color: rgba(0, 0, 0, 0.02) !important;
-}
-.editable-contact input:focus {
-  outline: none !important;
-  border-color: #3182ce !important;
-  border-style: solid !important;
-  background-color: #ffffff !important;
-  color: #000000 !important;
-}
+.editable-contact input:hover { border-color: #cbd5e0 !important; border-style: dashed !important; }
+.editable-contact input:focus { outline: none !important; border-color: #3182ce !important; border-style: solid !important; background-color: #fff !important; color: #000 !important; }
 
-/* CAIXA DO CLIENTE */
-.client-box {
-  background-color: #f7fafc;
-  border: 1px solid #e2e8f0;
-  border-radius: 6px;
-  padding: 20px;
-  margin: 20px 0;
-  display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
-  gap: 15px;
-}
+/* DADOS CLIENTE */
+.client-box { background-color: #f7fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 20px; margin: 20px 0; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; }
 .client-box .field { display: flex; flex-direction: column; }
 .client-box label { font-size: 11px; font-weight: 700; color: #718096; text-transform: uppercase; margin-bottom: 6px; }
 .client-box input { padding: 8px 12px; border: 1px solid #cbd5e0; border-radius: 4px; font-size: 13px; }
 
-/* SPINNER DO CNPJ */
-.spinner {
-  position: absolute; right: 10px; top: 28px;
-  width: 16px; height: 16px;
-  border: 2px solid #cbd5e0; border-top-color: #3182ce;
-  border-radius: 50%; animation: spin 0.6s linear infinite;
-}
+/* LOADING DA API CNPJ */
+.spinner { position: absolute; right: 10px; top: 28px; width: 16px; height: 16px; border: 2px solid #cbd5e0; border-top-color: #3182ce; border-radius: 50%; animation: spin 0.6s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
 
-/* TABELA DE PRODUTOS */
+/* TABELA DE ITENS */
 table { width: 100%; border-collapse: collapse; margin: 20px 0; font-size: 13px; }
 th { background-color: #f7fafc; color: #4a5568; font-weight: 700; padding: 12px; text-align: left; border-bottom: 2px solid #e2e8f0; }
 td { padding: 10px 12px; border-bottom: 1px solid #edf2f7; background-color: #fff; }
-table input { width: 90%; padding: 6px; border: 1px solid #cbd5e0; border-radius: 4px; font-size: 13px; }
+table input { padding: 6px; border: 1px solid #cbd5e0; border-radius: 4px; font-size: 13px; box-sizing: border-box; }
+
+/* ELEMENTO DIV EDITÁVEL DINÂMICO */
+table div.prod-nome {
+  width: 100%; min-height: 32px; padding: 6px; border: 1px solid #cbd5e0; border-radius: 4px;
+  font-size: 13px; font-family: inherit; background-color: #fff; color: #000;
+  word-break: break-word; outline: none; box-sizing: border-box; text-align: left;
+}
+table div.prod-nome:empty:before { content: attr(data-placeholder); color: #a0aec0; cursor: text; }
 
 .center { text-align: center; }
 .right { text-align: right; }
-th.center, td.center input { text-align: center; }
-th.right, td.right input { text-align: right; }
+td.center input { text-align: center; }
+td.right input { text-align: right; }
 
-/* CONTROLES DE ORDENAÇÃO */
 .action-buttons { display: flex; gap: 4px; justify-content: center; }
 .btn-order { background: #edf2f7; border: 1px solid #cbd5e0; border-radius: 4px; padding: 2px 6px; cursor: pointer; font-size: 10px; }
 .btn-remove { background: #fff5f5; border: 1px solid #fed7d7; color: #e53e3e; border-radius: 4px; padding: 2px 6px; cursor: pointer; font-size: 10px; font-weight: bold; }
-
 .btn-add { background: #edf2f7; border: 1px dashed #cbd5e0; color: #4a5568; padding: 10px; width: 100%; border-radius: 6px; font-weight: 600; cursor: pointer; margin-bottom: 20px; }
 
-/* RODAPÉ DA TABELA */
+/* TFOOT DO PREÇO */
 tfoot td.gray { background-color: #f7fafc; font-weight: 600; color: #4a5568; text-align: right; border: 1px solid #e2e8f0; }
-tfoot td.val { font-weight: 600; color: #2d3748; text-align: right; border: 1px solid #e2e8f0; width: 150px; }
+tfoot td.val { font-weight: 600; color: #2d3748; text-align: right; border: 1px solid #e2e8f0; width: 155px; }
 tfoot td.big { font-size: 16px; color: #2b6cb0; font-weight: 700; }
 tfoot select { padding: 4px; width: 100%; border: 1px solid #cbd5e0; border-radius: 4px; font-size: 12px; }
 
-/* DESCONTO E OBSERVAÇÕES */
 .desconto-row { display: flex; align-items: center; gap: 10px; margin-bottom: 20px; background: #f7fafc; padding: 10px 15px; border-radius: 6px; border: 1px solid #e2e8f0; width: fit-content; }
 .desconto-row label { font-size: 12px; font-weight: 600; }
 .desconto-row select, .desconto-row input { padding: 5px; border: 1px solid #cbd5e0; border-radius: 4px; }
@@ -158,106 +100,64 @@ tfoot select { padding: 4px; width: 100%; border: 1px solid #cbd5e0; border-radi
 .obs-label { font-size: 12px; font-weight: 700; color: #4a5568; margin-bottom: 8px; }
 .obs-box textarea { padding: 12px; border: 1px solid #cbd5e0; border-radius: 6px; font-size: 12px; font-family: inherit; line-height: 1.6; resize: vertical; color: #4a5568; background-color: #fcfcfc; }
 
-/* ASSINATURA */
-.signature-container { margin-top: 50px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
+.signature-container { margin-top: 50px; display: flex; flex-direction: column; align-items: center; justify-content: center; }
 .signature-line { width: 250px; border-bottom: 1px solid #718096; margin-bottom: 8px; }
 .signature-title { font-size: 12px; color: #4a5568; font-weight: 600; }
 
-/* NOVO: REGRA DAS LINHAS SOB ENCOMENDA */
 .linha-encomenda { background-color: #fff5f5 !important; }
-.linha-encomenda input { color: #c53030 !important; font-weight: 600; }
+.linha-encomenda input, .linha-encomenda div.prod-nome { color: #c53030 !important; font-weight: 600; }
+
+/* CONTAINER DO AUTOCOMPLETAR */
+.autocomplete-suggestions {
+  position: absolute; background: #fff; border: 1px solid #cbd5e0; border-radius: 4px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.1); z-index: 9999; max-height: 180px; overflow-y: auto; display: none;
+}
+.autocomplete-item { padding: 8px 12px; cursor: pointer; display: flex; justify-content: space-between; font-size: 12px; border-bottom: 1px solid #edf2f7; }
+.autocomplete-item:hover { background-color: #ebf8ff; color: #2b6cb0; }
+
+/* MODAL DE HISTÓRICO */
+.modal { display: none; position: fixed; z-index: 10000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.4); overflow: auto; }
+.modal-content { background-color: #fff; margin: 10% auto; padding: 25px; border-radius: 8px; width: 60%; box-shadow: 0 4px 20px rgba(0,0,0,0.15); }
+.modal-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e2e8f0; padding-bottom: 10px; margin-bottom: 15px; }
+.modal-header h3 { margin: 0; color: #2d3748; }
+.close-modal { font-size: 24px; font-weight: bold; cursor: pointer; color: #a0aec0; }
+.close-modal:hover { color: #4a5568; }
+.table-historico { width: 100%; font-size: 13px; }
+.table-historico th { background: #f7fafc; padding: 10px; }
+.table-historico td { padding: 10px; border-bottom: 1px solid #edf2f7; background: none; }
 
 /* ==========================================================================
-   REGRAS ULTRA FORÇADAS PARA O MODO ESCURO (CORRIGIDO)
+   CONFIGURAÇÃO DO MODO ESCURO (DARK THEME)
    ========================================================================== */
-body.dark-theme {
-  background-color: #1a202c !important;
-  color: #e2e8f0 !important;
-}
-body.dark-theme .card {
-  background-color: #2d3748 !important;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3) !important;
-  border: 1px solid #4a5568 !important;
-}
-body.dark-theme #parcelas-detalhe {
-  color: #cbd5e0 !important;
-}
-
-/* Força cores certas nas linhas de encomenda do Modo Dark */
+body.dark-theme { background-color: #1a202c !important; color: #e2e8f0 !important; }
+body.dark-theme .card, body.dark-theme .modal-content { background-color: #2d3748 !important; border: 1px solid #4a5568 !important; }
+body.dark-theme .modal-header h3, body.dark-theme .table-historico td { color: #ffffff !important; }
+body.dark-theme #parcelas-detalhe { color: #cbd5e0 !important; }
 body.dark-theme .linha-encomenda { background-color: #742a2a !important; }
-body.dark-theme .linha-encomenda input { color: #fed7d7 !important; }
+body.dark-theme .linha-encomenda input, body.dark-theme .linha-encomenda div.prod-nome { color: #fed7d7 !important; }
 
-/* Corrige falha de cor de fundo nas linhas e células da tabela */
-body.dark-theme table,
-body.dark-theme tr,
-body.dark-theme tbody tr,
-body.dark-theme #tabela-produtos tr {
-  background-color: #2d3748 !important;
-}
-body.dark-theme td {
-  background-color: transparent !important;
-  color: #e2e8f0 !important;
-  border-bottom: 1px solid #4a5568 !important;
-}
+body.dark-theme table, body.dark-theme tr, body.dark-theme tbody tr, body.dark-theme #tabela-produtos tr { background-color: #2d3748 !important; }
+body.dark-theme td { background-color: transparent !important; color: #e2e8f0 !important; border-bottom: 1px solid #4a5568 !important; }
 
-/* Todos os inputs e selects escurecidos */
-body.dark-theme input[type="text"],
-body.dark-theme input[type="number"],
-body.dark-theme textarea,
-body.dark-theme select,
-body.dark-theme table input {
-  background-color: #1a202c !important;
-  color: #ffffff !important;
-  border: 1px solid #4a5568 !important;
+body.dark-theme input[type="text"], body.dark-theme input[type="number"], body.dark-theme textarea,
+body.dark-theme select, body.dark-theme table input, body.dark-theme table div.prod-nome {
+  background-color: #1a202c !important; color: #ffffff !important; border: 1px solid #4a5568 !important;
 }
-body.dark-theme th {
-  background-color: #1a202c !important;
-  color: #ffffff !important;
-  border-bottom: 2px solid #4a5568 !important;
-}
-
-/* Células de rodapé consertadas */
-body.dark-theme table tfoot tr td,
-body.dark-theme tfoot td {
-  background-color: #1a202c !important;
-  color: #e2e8f0 !important;
-  border: 1px solid #4a5568 !important;
-}
-body.dark-theme #subtotal-display,
-body.dark-theme tfoot td.val {
-  background-color: #2d3748 !important;
-  color: #ffffff !important;
-}
-body.dark-theme #total-display { 
-  background-color: #2d3748 !important;
-  color: #63b3ed !important; 
-  font-weight: bold; 
-}
-body.dark-theme #desconto-display { 
-  background-color: #2d3748 !important;
-  color: #68d391 !important; 
-}
-body.dark-theme ::placeholder {
-  color: #718096 !important;
-  opacity: 1;
-}
-
-/* Caixas e labels adicionais em Modo Dark */
+body.dark-theme th, body.dark-theme .table-historico th { background-color: #1a202c !important; color: #ffffff !important; border-bottom: 2px solid #4a5568 !important; }
+body.dark-theme table tfoot tr td, body.dark-theme tfoot td { background-color: #1a202c !important; color: #e2e8f0 !important; border: 1px solid #4a5568 !important; }
+body.dark-theme #subtotal-display, body.dark-theme tfoot td.val { background-color: #2d3748 !important; color: #ffffff !important; }
+body.dark-theme #total-display { background-color: #2d3748 !important; color: #63b3ed !important; }
+body.dark-theme #desconto-display { background-color: #2d3748 !important; color: #68d391 !important; }
 body.dark-theme .client-box { background-color: #1a202c !important; border-color: #4a5568 !important; }
-body.dark-theme .client-box label,
-body.dark-theme .desconto-row label,
-body.dark-theme .obs-label,
-body.dark-theme .intro,
-body.dark-theme .date-row strong { color: #cbd5e0 !important; }
+body.dark-theme .client-box label, body.dark-theme .desconto-row label, body.dark-theme .obs-label, body.dark-theme .intro, body.dark-theme .date-row strong { color: #cbd5e0 !important; }
 body.dark-theme .signature-title { color: #a0aec0 !important; }
-
-/* Cabeçalho editável em Modo Dark */
 body.dark-theme .editable-contact input { color: #cbd5e0 !important; }
-body.dark-theme .editable-contact input:hover { border-color: #4a5568 !important; background-color: rgba(255, 255, 255, 0.05) !important; }
-body.dark-theme .editable-contact input:focus { background-color: #1a202c !important; border-color: #63b3ed !important; color: #ffffff !important; }
+body.dark-theme .autocomplete-suggestions { background: #2d3748; border-color: #4a5568; }
+body.dark-theme .autocomplete-item { color: #fff; border-color: #4a5568; }
+body.dark-theme .autocomplete-item:hover { background-color: #1a202c; color: #63b3ed; }
 
 /* ==========================================================================
-   REGRAS DE IMPRESSÃO (PDF LIMPO)
+   REGRAS DE IMPRESSÃO DO PDF
    ========================================================================== */
 @media print {
   .no-print { display: none !important; }
@@ -265,14 +165,26 @@ body.dark-theme .editable-contact input:focus { background-color: #1a202c !impor
   .card, .dark-theme .card { box-shadow: none !important; border: none !important; padding: 0; max-width: 100%; }
   
   .linha-encomenda { background-color: transparent !important; }
-  .linha-encomenda input { color: #000000 !important; }
+  .linha-encomenda input, .linha-encomenda div.prod-nome { color: #000000 !important; }
   
   body.dark-theme table, body.dark-theme tr, body.dark-theme tbody tr, body.dark-theme #tabela-produtos tr, body.dark-theme td {
     background-color: transparent !important; color: #000000 !important;
   }
-  input, textarea, select, table input, body.dark-theme input, body.dark-theme textarea, body.dark-theme table input {
+
+  input, textarea, select, body.dark-theme input, body.dark-theme textarea {
     border: none !important; background: transparent !important; color: #000000 !important; padding: 4px 0; -webkit-appearance: none;
   }
+  
+  table input { width: 100% !important; max-width: 100% !important; box-sizing: border-box !important; }
+
+  table div.prod-nome {
+    width: 100% !important; max-width: 100% !important; border: none !important;
+    background: transparent !important; padding: 0 !important; overflow: visible !important;
+    display: block !important; white-space: normal !important;
+  }
+
+  #tabela-produtos td { overflow: visible !important; white-space: normal !important; }
+  
   th { background-color: #f1f5f9 !important; color: #000000 !important; border-bottom: 2px solid #cbd5e0 !important; }
   tfoot td.gray { background-color: #f1f5f9 !important; color: #000000 !important; }
   tfoot td.val, body.dark-theme tfoot td.val { background-color: transparent !important; color: #000000 !important; }
