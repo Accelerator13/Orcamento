@@ -13,7 +13,7 @@
     <div class="topbar-left">
       <button id="btn-dark-mode" class="btn btn-gray" onclick="alternarModoEscuro()">🌙 Modo Escuro</button>
       <button class="btn btn-gray" onclick="limparOrcamento()">🗑️ Limpar Tela</button>
-      <button class="btn btn-gray" onclick="abrirModalHistorico()">📜 Histórico & Dashboard</button>
+      <button class="btn btn-gray" onclick="abrirModalGestao()">⚙️ Painel de Gestão Avançada</button>
     </div>
     <div class="topbar-right">
       <button id="btn-layout-print" class="btn btn-gray" onclick="alternarLayoutImpressao()">📄 Layout: A4</button>
@@ -54,6 +54,7 @@
         <label for="cliente-cnpj">CNPJ (Cole ou digite)</label>
         <input type="text" id="cliente-cnpj" placeholder="Ex: 47.960.950/0001-00" oninput="buscarCNPJ()">
         <div id="cnpj-spinner" class="spinner" style="display: none;"></div>
+        <div id="crm-suggest-list" class="autocomplete-suggestions no-print" style="top: 55px; width: 100%;"></div>
       </div>
       <div class="field">
         <label for="cliente-nome">Orçamento Para</label>
@@ -168,62 +169,114 @@
   <!-- CONTAINER DE SUGESTÕES (AUTOCOMPLETAR) -->
   <div id="autocomplete-list" class="autocomplete-suggestions no-print"></div>
 
-  <!-- MODAL DO HISTÓRICO & DASHBOARD -->
-  <div id="modal-historico" class="modal no-print">
-    <div class="modal-content" style="width: 80%; max-width: 1100px;">
+  <!-- MEGA MODAL DE GESTÃO AVANÇADA -->
+  <div id="modal-gestao" class="modal no-print">
+    <div class="modal-content" style="width: 85%; max-width: 1200px;">
       <div class="modal-header">
-        <h3>Painel de Gestão e Histórico</h3>
-        <span class="close-modal" onclick="fecharModalHistorico()">&times;</span>
+        <div class="tabs-menu">
+          <button class="tab-btn active" onclick="mudarAbaGestao('tab-dash')">📈 Dashboard & Histórico</button>
+          <button class="tab-btn" onclick="mudarAbaGestao('tab-catalogo')">📦 Gerenciar Catálogo</button>
+          <button class="tab-btn" onclick="mudarAbaGestao('tab-crm')">👥 Clientes (CRM)</button>
+        </div>
+        <span class="close-modal" onclick="fecharModalGestao()">&times;</span>
       </div>
       
-      <!-- DASHBOARD METRICAS -->
-      <div class="dashboard-grid">
-        <div class="dash-card">
-          <span class="title">💸 Faturamento Total</span>
-          <span id="dash-faturamento" class="value">R$ 0,00</span>
+      <!-- ABA 1: DASHBOARD E HISTÓRICO -->
+      <div id="tab-dash" class="tab-content active-content">
+        <div class="dashboard-grid">
+          <div class="dash-card">
+            <span class="title">💸 Faturamento Total</span>
+            <span id="dash-faturamento" class="value">R$ 0,00</span>
+          </div>
+          <div class="dash-card">
+            <span class="title">📋 Total Orçamentos</span>
+            <span id="dash-qtd" class="value">0</span>
+          </div>
+          <div class="dash-card">
+            <span class="title">📊 Ticket Médio</span>
+            <span id="dash-ticket" class="value">R$ 0,00</span>
+          </div>
+          <div class="dash-card">
+            <span class="title">🎯 Conversão (Aprovados)</span>
+            <span id="dash-conversao" class="value">0%</span>
+          </div>
         </div>
-        <div class="dash-card">
-          <span class="title">📋 Total Orçamentos</span>
-          <span id="dash-qtd" class="value">0</span>
+
+        <div class="historico-controls">
+          <input type="text" id="busca-historico" placeholder="🔍 Buscar por Cliente ou Código..." oninput="renderizarHistorico()">
+          <div class="backup-actions">
+            <button class="btn btn-gray" onclick="exportarBackupCompleto()">📥 Exportar Sistema (.JSON)</button>
+            <label class="btn btn-gray" style="display:inline-block; margin:0; cursor:pointer;">
+              📤 Importar Sistema <input type="file" id="import-json-completo" accept=".json" style="display:none;" onchange="importarBackupCompleto(this)">
+            </label>
+          </div>
         </div>
-        <div class="dash-card">
-          <span class="title">📊 Ticket Médio</span>
-          <span id="dash-ticket" class="value">R$ 0,00</span>
-        </div>
-        <div class="dash-card">
-          <span class="title">🎯 Conversão (Aprovados)</span>
-          <span id="dash-conversao" class="value">0%</span>
+
+        <div class="modal-body">
+          <table class="table-historico">
+            <thead>
+              <tr>
+                <th>Código</th>
+                <th>Cliente</th>
+                <th>Data</th>
+                <th>Total</th>
+                <th>Status</th>
+                <th>Ações</th>
+              </tr>
+            </thead>
+            <tbody id="lista-historico-corpo"></tbody>
+          </table>
         </div>
       </div>
 
-      <!-- CONTROLES DO HISTÓRICO -->
-      <div class="historico-controls">
-        <input type="text" id="busca-historico" placeholder="🔍 Buscar por Cliente ou Código..." oninput="renderizarAbasHistorico()">
-        <div class="backup-actions">
-          <button class="btn btn-gray" onclick="exportarBackupJSON()">📥 Exportar Backup</button>
-          <label class="btn btn-gray" style="display:inline-block; margin:0; cursor:pointer;">
-            📤 Importar Backup <input type="file" id="import-json" accept=".json" style="display:none;" onchange="importarBackupJSON(this)">
-          </label>
+      <!-- ABA 2: GERENCIADOR DE CATÁLOGO -->
+      <div id="tab-catalogo" class="tab-content">
+        <div class="cadastro-inline-box">
+          <h4>Cadastrar Novo Produto</h4>
+          <div class="cadastro-inputs">
+            <input type="text" id="cad-prod-nome" placeholder="Nome do Produto (Ex: Processador Ryzen 5...)">
+            <input type="text" id="cad-prod-preco" placeholder="Preço (Ex: 850,00)" oninput="aplicarMascaraDinheiro(this)">
+            <button class="btn btn-blue" onclick="adicionarProdutoAoCatalogo()">➕ Adicionar</button>
+          </div>
+        </div>
+        <div class="modal-body">
+          <table class="table-historico">
+            <thead>
+              <tr>
+                <th>Nome do Produto</th>
+                <th class="right" style="width: 150px;">Preço Padrão</th>
+                <th class="center" style="width: 100px;">Ações</th>
+              </tr>
+            </thead>
+            <tbody id="lista-catalogo-corpo"></tbody>
+          </table>
         </div>
       </div>
 
-      <div class="modal-body">
-        <table class="table-historico">
-          <thead>
-            <tr>
-              <th>Código</th>
-              <th>Cliente</th>
-              <th>Data</th>
-              <th>Total</th>
-              <th>Status</th>
-              <th>Ações</th>
-            </tr>
-          </thead>
-          <tbody id="lista-historico-corpo">
-            <!-- Injetado via JS -->
-          </tbody>
-        </table>
+      <!-- ABA 3: CARTEIRA DE CLIENTES (CRM) -->
+      <div id="tab-crm" class="tab-content">
+        <div class="cadastro-inline-box">
+          <h4>Cadastrar / Atualizar Cliente</h4>
+          <div class="cadastro-inputs">
+            <input type="text" id="crm-cnpj" placeholder="CNPJ">
+            <input type="text" id="crm-nome" placeholder="Nome / Razão Social">
+            <button class="btn btn-blue" onclick="salvarClienteManualmente()">💾 Salvar Cliente</button>
+          </div>
+        </div>
+        <div class="modal-body">
+          <table class="table-historico">
+            <thead>
+              <tr>
+                <th>CNPJ</th>
+                <th>Nome / Razão Social</th>
+                <th class="center" style="width: 100px;">Ações</th>
+              </tr>
+            </thead>
+            <tbody id="lista-crm-corpo"></tbody>
+          </table>
+        </div>
       </div>
+
     </div>
   </div>
 

@@ -12,7 +12,7 @@ body {
 }
 .layout-a4 { max-width: 950px; }
 
-/* CONFIGURAÇÃO DO NOVO LAYOUT CUPOM TÉRMICO (80mm) */
+/* LAYOUT DE IMPRESSÃO - BOBINA CUPOM 80mm */
 .layout-cupom {
   max-width: 320px !important; padding: 15px !important; border-radius: 0 !important;
   font-size: 11px !important; border: 1px dashed #cbd5e0 !important;
@@ -24,24 +24,40 @@ body {
 .layout-cupom .client-box { grid-template-columns: 1fr !important; padding: 10px; gap: 8px; }
 .layout-cupom .client-box .field { grid-column: span 1 !important; }
 .layout-cupom table, .layout-cupom th, .layout-cupom td { font-size: 11px !important; padding: 5px 2px !important; }
-.layout-cupom table th:nth-child(4), .layout-cupom table td:nth-child(4) { display: none; } /* Oculta OBS no cupom */
-.layout-cupom table th:nth-child(6), .layout-cupom table td:nth-child(6) { display: none; } /* Oculta AÇÕES */
+.layout-cupom table th:nth-child(4), .layout-cupom table td:nth-child(4) { display: none; }
+.layout-cupom table th:nth-child(6), .layout-cupom table td:nth-child(6) { display: none; }
 .layout-cupom tfoot td.val { width: auto !important; }
-.layout-cupom textarea { font-size: 10px !important; rows: 4; }
+.layout-cupom textarea { font-size: 10px !important; }
 
-/* DASHBOARD DENTRO DA MODAL */
-.dashboard-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 20px; }
+/* CONTROLE DE ABAS (TABS) DENTRO DA MODAL */
+.tabs-menu { display: flex; gap: 6px; }
+.tab-btn { padding: 8px 16px; border: 1px solid #e2e8f0; border-bottom: none; border-radius: 6px 6px 0 0; background: #edf2f7; font-weight: 600; font-size: 13px; cursor: pointer; color: #4a5568; transition: all 0.2s; }
+.tab-btn:hover { background: #e2e8f0; }
+.tab-btn.active { background: #fff; border-color: #cbd5e0; color: #212529; position: relative; z-index: 5; margin-bottom: -1px; padding-bottom: 9px; }
+.tab-content { display: none; }
+.tab-content.active-content { display: block; }
+
+/* COMPONENTES DE CADASTRO INLINE (CRM / CATALOGO) */
+.cadastro-inline-box { background: #f7fafc; border: 1px solid #e2e8f0; padding: 15px; border-radius: 6px; margin-bottom: 20px; }
+.cadastro-inline-box h4 { margin: 0 0 10px 0; font-size: 13px; text-transform: uppercase; color: #4a5568; }
+.cadastro-inputs { display: flex; gap: 10px; }
+.cadastro-inputs input { padding: 8px; border: 1px solid #cbd5e0; border-radius: 4px; font-size: 13px; }
+.cadastro-inputs input:nth-child(1) { flex-grow: 2; }
+.cadastro-inputs input:nth-child(2) { flex-grow: 1; }
+
+/* DASHBOARD GRID */
+.dashboard-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 20px; margin-top: 10px; }
 .dash-card { background: #f7fafc; border: 1px solid #e2e8f0; padding: 15px; border-radius: 6px; display: flex; flex-direction: column; }
 .dash-card .title { font-size: 11px; color: #718096; font-weight: bold; text-transform: uppercase; }
 .dash-card .value { font-size: 18px; font-weight: 700; color: #2d3748; margin-top: 4px; }
 
 .historico-controls { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; gap: 10px; }
-#busca-historico { padding: 8px 12px; width: 50%; border: 1px solid #cbd5e0; border-radius: 6px; font-size: 13px; }
+#busca-historico { padding: 8px 12px; width: 40%; border: 1px solid #cbd5e0; border-radius: 6px; font-size: 13px; }
 .backup-actions { display: flex; gap: 8px; }
 
-.status-select { padding: 4px; border-radius: 4px; font-size: 12px; font-weight: 600; cursor: pointer; border: 1px solid #cbd5e0; }
+.status-select { padding: 4px; border-radius: 4px; font-size: 12px; font-weight: 600; cursor: pointer; border: 1px solid #cbd5e0; background: #fff; }
 
-/* TOPBAR - CONTROLES */
+/* TOPBAR */
 .topbar { max-width: 1010px; margin: 0 auto 20px auto; display: flex; justify-content: space-between; gap: 10px; }
 .topbar-left, .topbar-right { display: flex; gap: 10px; }
 .btn { padding: 10px 16px; border: none; border-radius: 6px; font-weight: 600; font-size: 13px; cursor: pointer; transition: all 0.2s; }
@@ -50,7 +66,7 @@ body {
 .btn-green { background-color: #38a169; color: #fff; }
 .btn:hover { opacity: 0.9; transform: translateY(-1px); }
 
-/* HEADER & DADOS */
+/* HEADER */
 .header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #edf2f7; padding-bottom: 20px; }
 .logo-imagem { max-height: 55px; object-fit: contain; }
 .header-right { text-align: right; }
@@ -69,7 +85,7 @@ body {
 .spinner { position: absolute; right: 10px; top: 28px; width: 16px; height: 16px; border: 2px solid #cbd5e0; border-top-color: #3182ce; border-radius: 50%; animation: spin 0.6s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
 
-/* ESTRUTURA TABELA */
+/* TABELA DE PRODUTOS */
 table { width: 100%; border-collapse: collapse; margin: 20px 0; font-size: 13px; }
 th { background-color: #f7fafc; color: #4a5568; font-weight: 700; padding: 12px; text-align: left; border-bottom: 2px solid #e2e8f0; }
 td { padding: 10px 12px; border-bottom: 1px solid #edf2f7; background-color: #fff; }
@@ -110,15 +126,14 @@ tfoot select { padding: 4px; width: 100%; border: 1px solid #cbd5e0; border-radi
 .linha-encomenda input, .linha-encomenda div.prod-nome { color: #c53030 !important; font-weight: 600; }
 
 .autocomplete-suggestions { position: absolute; background: #fff; border: 1px solid #cbd5e0; border-radius: 4px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); z-index: 9999; max-height: 180px; overflow-y: auto; display: none; }
-.autocomplete-item { padding: 8px 12px; cursor: pointer; display: flex; justify-content: space-between; font-size: 12px; border-bottom: 1px solid #edf2f7; }
+.autocomplete-item { padding: 8px 12px; cursor: pointer; display: flex; justify-content: space-between; font-size: 12px; border-bottom: 1px solid #edf2f7; text-align: left; }
 .autocomplete-item:hover { background-color: #ebf8ff; color: #2b6cb0; }
 
-/* MODAL HISTÓRICO */
+/* MODAIS */
 .modal { display: none; position: fixed; z-index: 10000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.4); overflow: auto; }
-.modal-content { background-color: #fff; margin: 5% auto; padding: 25px; border-radius: 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.15); }
-.modal-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e2e8f0; padding-bottom: 10px; margin-bottom: 15px; }
-.modal-header h3 { margin: 0; color: #2d3748; }
-.close-modal { font-size: 24px; font-weight: bold; cursor: pointer; color: #a0aec0; }
+.modal-content { background-color: #fff; margin: 4% auto; padding: 25px; border-radius: 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.15); border: 1px solid #cbd5e0; }
+.modal-header { display: flex; justify-content: space-between; align-items: flex-end; border-bottom: 1px solid #cbd5e0; padding-bottom: 0; margin-bottom: 15px; }
+.close-modal { font-size: 24px; font-weight: bold; cursor: pointer; color: #a0aec0; padding-bottom: 5px; }
 .close-modal:hover { color: #4a5568; }
 .table-historico { width: 100%; font-size: 13px; border-collapse: collapse; }
 .table-historico th { background: #f7fafc; padding: 10px; }
@@ -128,19 +143,21 @@ tfoot select { padding: 4px; width: 100%; border: 1px solid #cbd5e0; border-radi
    DARK MODE
    ========================================================================== */
 body.dark-theme { background-color: #1a202c !important; color: #e2e8f0 !important; }
-body.dark-theme .card, body.dark-theme .modal-content, body.dark-theme .dash-card { background-color: #2d3748 !important; border: 1px solid #4a5568 !important; }
-body.dark-theme .modal-header h3, body.dark-theme .table-historico td, body.dark-theme .dash-card .value { color: #ffffff !important; }
+body.dark-theme .card, body.dark-theme .modal-content, body.dark-theme .dash-card, body.dark-theme .cadastro-inline-box { background-color: #2d3748 !important; border: 1px solid #4a5568 !important; }
+body.dark-theme .tab-btn { background: #1a202c; color: #a0aec0; border-color: #4a5568; }
+body.dark-theme .tab-btn.active { background: #2d3748; color: #fff; border-color: #4a5568; border-bottom-color: #2d3748; }
+body.dark-theme .table-historico td, body.dark-theme .dash-card .value { color: #ffffff !important; }
 body.dark-theme .linha-encomenda { background-color: #742a2a !important; }
 body.dark-theme .linha-encomenda input, body.dark-theme .linha-encomenda div.prod-nome { color: #fed7d7 !important; }
 body.dark-theme table, body.dark-theme tr, body.dark-theme tbody tr, body.dark-theme #tabela-produtos tr { background-color: #2d3748 !important; }
 body.dark-theme td { background-color: transparent !important; color: #e2e8f0 !important; border-bottom: 1px solid #4a5568 !important; }
-body.dark-theme input[type="text"], body.dark-theme input[type="number"], body.dark-theme textarea, body.dark-theme select, body.dark-theme table input, body.dark-theme table div.prod-nome { background-color: #1a202c !important; color: #ffffff !important; border: 1px solid #4a5568 !important; }
+body.dark-theme input, body.dark-theme textarea, body.dark-theme select, body.dark-theme table div.prod-nome { background-color: #1a202c !important; color: #ffffff !important; border: 1px solid #4a5568 !important; }
 body.dark-theme th, body.dark-theme .table-historico th { background-color: #1a202c !important; color: #ffffff !important; border-bottom: 2px solid #4a5568 !important; }
 body.dark-theme table tfoot tr td, body.dark-theme tfoot td { background-color: #1a202c !important; color: #e2e8f0 !important; border: 1px solid #4a5568 !important; }
 body.dark-theme #subtotal-display, body.dark-theme tfoot td.val { background-color: #2d3748 !important; color: #ffffff !important; }
 body.dark-theme #total-display { background-color: #2d3748 !important; color: #63b3ed !important; }
 body.dark-theme .client-box { background-color: #1a202c !important; border-color: #4a5568 !important; }
-body.dark-theme .client-box label, body.dark-theme .desconto-row label, body.dark-theme .obs-label, body.dark-theme .intro, body.dark-theme .date-row strong { color: #cbd5e0 !important; }
+body.dark-theme .client-box label, body.dark-theme .desconto-row label, body.dark-theme .obs-label, body.dark-theme .intro, body.dark-theme .date-row strong, body.dark-theme .cadastro-inline-box h4 { color: #cbd5e0 !important; }
 body.dark-theme .autocomplete-suggestions { background: #2d3748; border-color: #4a5568; }
 body.dark-theme .autocomplete-item { color: #fff; border-color: #4a5568; }
 body.dark-theme .autocomplete-item:hover { background-color: #1a202c; color: #63b3ed; }
@@ -152,12 +169,7 @@ body.dark-theme .autocomplete-item:hover { background-color: #1a202c; color: #63
   .no-print { display: none !important; }
   body, .dark-theme body { background-color: #ffffff !important; color: #000000 !important; padding: 0; }
   .card, .dark-theme .card { box-shadow: none !important; border: none !important; padding: 0; width: 100% !important; max-width: 100% !important; }
-  
-  /* Mantém consistência visual do Cupom ao mandar imprimir */
   .layout-cupom { max-width: 80mm !important; width: 80mm !important; font-size: 10px !important; border: none !important; padding: 0 !important; }
-  .layout-cupom table th:nth-child(4), .layout-cupom table td:nth-child(4) { display: none !important; }
-  .layout-cupom table th:nth-child(6), .layout-cupom table td:nth-child(6) { display: none !important; }
-
   input, textarea, select { border: none !important; background: transparent !important; color: #000000 !important; padding: 4px 0; -webkit-appearance: none; }
   table div.prod-nome { border: none !important; background: transparent !important; padding: 0 !important; display: block !important; }
   th { background-color: #f1f5f9 !important; color: #000000 !important; border-bottom: 2px solid #cbd5e0 !important; }

@@ -1,4 +1,5 @@
-const CATALOGO_PRODUTOS = [
+// LISTA PADRÃO INICIAL (Caso o LocalStorage esteja limpo)
+const CATALOGO_PADRAO = [
   { nome: "SSD Kingston NV2 1TB NVMe M.2", preco: "389.90" },
   { nome: "SSD Kingston NV2 500GB NVMe M.2", preco: "249.00" },
   { nome: "Memória RAM Kingston Fury Beast 8GB DDR4 3200MHz", preco: "179.00" },
@@ -7,8 +8,7 @@ const CATALOGO_PRODUTOS = [
   { nome: "Processador AMD Ryzen 7 5700X 3.4GHz", preco: "1250.00" },
   { nome: "Placa de Vídeo NVIDIA RTX 3060 12GB", preco: "1999.00" },
   { nome: "Placa de Vídeo NVIDIA RTX 4060 8GB", preco: "2250.00" },
-  { nome: "Fonte XPG Core Reactor 850W 80 Plus Gold Modular", preco: "649.00" },
-  { nome: "Gabinete Gamer Gamdias Talos E3 Mesh", preco: "289.00" }
+  { nome: "Fonte XPG Core Reactor 850W 80 Plus Gold Modular", preco: "649.00" }
 ];
 
 const OPCOES_PAGAMENTO = {
@@ -23,6 +23,35 @@ const OPCOES_PAGAMENTO = {
 
 let divAtivaAutocompletar = null;
 
+// INICIALIZADORES DE BANCO DE DADOS LOCAL
+function obterCatalogo() {
+  let cat = localStorage.getItem("app_catalogo_prod");
+  if(!cat) {
+    localStorage.setItem("app_catalogo_prod", JSON.stringify(CATALOGO_PADRAO));
+    return CATALOGO_PADRAO;
+  }
+  return JSON.parse(cat);
+}
+
+function obterClientes() {
+  return JSON.parse(localStorage.getItem("app_clientes_crm")) || [];
+}
+
+function salvarClienteNoCRM(cnpj, nome) {
+  if(!cnpj || !nome) return;
+  let clientes = obterClientes();
+  let cnpjLimpo = cnpj.replace(/\D/g, '');
+  let index = clientes.findIndex(c => c.cnpj.replace(/\D/g, '') === cnpjLimpo);
+  
+  if(index >= 0) {
+    clientes[index].nome = nome;
+  } else {
+    clientes.push({ cnpj, nome });
+  }
+  localStorage.setItem("app_clientes_crm", JSON.stringify(clientes));
+}
+
+// CÁLCULO GERAL E MOTOR DE REGRAS
 function calcular() {
   const linhas = document.querySelectorAll("#tabela-produtos tr");
   let subtotalGeral = 0;
@@ -31,63 +60,45 @@ function calcular() {
     const inputQtd = linha.querySelector(".qtd-input");
     const inputValor = linha.querySelector(".valor-unitario"); 
     const inputObs = linha.querySelector(".prod-obs");
-    const celulaSubtotal = linha.querySelector(".subtotal-cell");
+    const celulaSubtotal = inline_obterSubtotalCell(linha);
 
-    if (inputObs) {
-      const textoObs = inputObs.value.toLowerCase();
-      if (textoObs.includes("sob encomenda") || textoObs.includes("encomenda")) {
-        linha.classList.add("linha-encomenda");
-      } else {
-        linha.classList.remove("linha-encomenda");
-      }
+    if (inputObs && inputObs.value.toLowerCase().match(/(sob )?encomenda/)) {
+      linha.classList.add("linha-encomenda");
+    } else if (linha.classList.contains("linha-encomenda")) {
+      linha.classList.remove("linha-encomenda");
     }
 
     if (inputQtd && inputValor && celulaSubtotal) {
       const qtd = parseFloat(inputQtd.value) || 0;
-      const valorTexto = inputValor.value.replace(/\D/g, '');
-      const valorUnitario = (parseFloat(valorTexto) / 100) || 0;
-
+      const valorUnitario = parseFloat(inputValor.value.replace(/[^\d,]/g, '').replace(',', '.')) || 0;
       const subtotalItem = qtd * valorUnitario;
       subtotalGeral += subtotalItem;
 
-      celulaSubtotal.textContent = subtotalItem.toLocaleString('pt-BR', {
-        style: 'currency', currency: 'BRL'
-      });
+      celulaSubtotal.textContent = subtotalItem.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
     }
   });
 
-  document.getElementById("subtotal-display").textContent = subtotalGeral.toLocaleString('pt-BR', {
-    style: 'currency', currency: 'BRL'
-  });
+  document.getElementById("subtotal-display").textContent = subtotalGeral.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
+  // REGRAS DE TRAVA DE DESCONTO (MÁXIMO 20%)
   const tipoDesconto = document.getElementById("tipo-desconto").value;
   const inputValorDesconto = document.getElementById("valor-desconto");
   let valorDescontoDigitado = parseFloat(inputValorDesconto.value) || 0;
   let totalDesconto = 0;
 
   if (tipoDesconto === "porcento") {
-    if (valorDescontoDigitado > 20) {
-      alert("Aviso: O limite máximo de desconto permitido é de 20%!");
-      valorDescontoDigitado = 20;
-      inputValorDesconto.value = 20;
-    }
+    if (valorDescontoDigitado > 20) { alert("Limite máximo de desconto: 20%!"); valorDescontoDigitado = 20; inputValorDesconto.value = 20; }
     totalDesconto = subtotalGeral * (valorDescontoDigitado / 100);
   } else if (tipoDesconto === "reais") {
     const limiteEmReais = subtotalGeral * 0.20;
-    if (valorDescontoDigitado > limiteEmReais) {
-      alert(`Aviso: O limite máximo de desconto em reais permitido para este valor é de ${limiteEmReais.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })} (20%)!`);
-      valorDescontoDigitado = limiteEmReais;
-      inputValorDesconto.value = limiteEmReais.toFixed(2);
-    }
+    if (valorDescontoDigitado > limiteEmReais) { alert("Limite máximo de desconto atingido (20% do valor total)!"); valorDescontoDigitado = limiteEmReais; inputValorDesconto.value = limiteEmReais.toFixed(2); }
     totalDesconto = valorDescontoDigitado;
   }
 
   const rowDesconto = document.getElementById("row-desconto");
   if (totalDesconto > 0) {
     rowDesconto.style.display = "";
-    document.getElementById("desconto-display").textContent = "– " + totalDesconto.toLocaleString('pt-BR', {
-      style: 'currency', currency: 'BRL'
-    });
+    document.getElementById("desconto-display").textContent = "– " + totalDesconto.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
   } else {
     rowDesconto.style.display = "none";
   }
@@ -98,50 +109,36 @@ function calcular() {
   
   if (OPCOES_PAGAMENTO[chavePagamento]) {
     const config = OPCOES_PAGAMENTO[chavePagamento];
-    if (config.acrescimo > 0) {
-      totalGeral = totalGeral * (1 + config.acrescimo);
-    }
+    if (config.acrescimo > 0) totalGeral = totalGeral * (1 + config.acrescimo);
 
-    if (chavePagamento === "vista" || chavePagamento === "boleto") {
+    if (config.parcelas === 1) {
       areaParcelas.textContent = config.texto;
-    } else if (chavePagamento === "outro") {
-      areaParcelas.textContent = "";
     } else {
-      const valorParcela = totalGeral / config.parcelas;
-      areaParcelas.textContent = `${config.parcelas}x de ${valorParcela.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })} ${config.texto}`;
+      areaParcelas.textContent = `${config.parcelas}x de ${(totalGeral / config.parcelas).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })} ${config.texto}`;
     }
   }
 
-  document.getElementById("total-display").textContent = totalGeral.toLocaleString('pt-BR', {
-    style: 'currency', currency: 'BRL'
-  });
-
+  document.getElementById("total-display").textContent = totalGeral.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
   salvarEstadoAtualNoLocalStorage();
 }
+
+function inline_obterSubtotalCell(linha) { return linha.querySelector(".subtotal-cell"); }
 
 function aplicarMascaraDinheiro(input) {
   let valor = input.value.replace(/\D/g, '');
   if(valor === "") valor = "0";
-  let valorFloat = parseFloat(valor) / 100;
-  input.value = valorFloat.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  input.value = (parseFloat(valor) / 100).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
+// INTERFACE DE AUTOCOMPLETAR PRODUTOS DO CATÁLOGO
 function gerenciarAutocompletar(divEditavel) {
   divAtivaAutocompletar = divEditavel;
   const texto = divEditavel.textContent.trim().toLowerCase();
   const listaSugestoes = document.getElementById("autocomplete-list");
-  
-  if (!texto) {
-    listaSugestoes.style.display = "none";
-    return;
-  }
+  if (!texto) { listaSugestoes.style.display = "none"; return; }
 
-  const filtrados = CATALOGO_PRODUTOS.filter(p => p.nome.toLowerCase().includes(texto));
-
-  if (filtrados.length === 0) {
-    listaSugestoes.style.display = "none";
-    return;
-  }
+  const filtrados = obterCatalogo().filter(p => p.nome.toLowerCase().includes(texto));
+  if (filtrados.length === 0) { listaSugestoes.style.display = "none"; return; }
 
   listaSugestoes.innerHTML = "";
   filtrados.forEach(produto => {
@@ -151,31 +148,56 @@ function gerenciarAutocompletar(divEditavel) {
     
     item.addEventListener("click", () => {
       divEditavel.textContent = produto.nome;
-      const linha = divEditavel.closest("tr");
-      const inputPreco = linha.querySelector(".valor-unitario");
-      let valorLimpo = produto.preco.replace('.', '');
-      let valorFloat = parseFloat(valorLimpo);
-      inputPreco.value = valorFloat.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2});
-      
+      const inputPreco = divEditavel.closest("tr").querySelector(".valor-unitario");
+      inputPreco.value = parseFloat(produto.preco).toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2});
       listaSugestoes.style.display = "none";
       calcular();
     });
     listaSugestoes.appendChild(item);
   });
 
-  const retangulo = divEditavel.getBoundingClientRect();
-  listaSugestoes.style.left = `${retangulo.left + window.scrollX}px`;
-  listaSugestoes.style.top = `${retangulo.bottom + window.scrollY}px`;
-  listaSugestoes.style.width = `${retangulo.width}px`;
+  const rect = divEditavel.getBoundingClientRect();
+  listaSugestoes.style.left = `${rect.left + window.scrollX}px`;
+  listaSugestoes.style.top = `${rect.bottom + window.scrollY}px`;
+  listaSugestoes.style.width = `${rect.width}px`;
   listaSugestoes.style.display = "block";
 }
+
+// AUTOCOMPLETAR CRM CLIENTES
+document.getElementById("cliente-cnpj").addEventListener("input", function() {
+  const txt = this.value.trim().toLowerCase();
+  const crmBox = document.getElementById("crm-suggest-list");
+  if(!txt) { crmBox.style.display = "none"; return; }
+
+  const filtrados = obterClientes().filter(c => c.cnpj.toLowerCase().includes(txt) || c.nome.toLowerCase().includes(txt));
+  if(filtrados.length === 0) { crmBox.style.display = "none"; return; }
+
+  crmBox.innerHTML = "";
+  filtrados.forEach(c => {
+    const item = document.createElement("div");
+    item.className = "autocomplete-item";
+    item.innerHTML = `<span><strong>${c.cnpj}</strong> - ${c.nome}</span>`;
+    item.onclick = function() {
+      document.getElementById("cliente-cnpj").value = c.cnpj;
+      document.getElementById("cliente-nome").value = c.nome;
+      crmBox.style.display = "none";
+      calcular();
+    };
+    crmBox.appendChild(item);
+  });
+  crmBox.style.display = "block";
+});
 
 document.addEventListener("click", (e) => {
   if (e.target !== divAtivaAutocompletar && !e.target.closest("#autocomplete-list")) {
     document.getElementById("autocomplete-list").style.display = "none";
   }
+  if (!e.target.closest("#cliente-cnpj") && !e.target.closest("#crm-suggest-list")) {
+    document.getElementById("crm-suggest-list").style.display = "none";
+  }
 });
 
+// CRIAÇÃO DE LINHAS DE PRODUTOS
 function adicionarNovaLinha(nome = "", qtd = 1, valor = "0,00", obs = "") {
   const tbody = document.getElementById("tabela-produtos");
   const novaLinha = document.createElement("tr");
@@ -188,59 +210,38 @@ function adicionarNovaLinha(nome = "", qtd = 1, valor = "0,00", obs = "") {
     <td class="right subtotal-cell" style="color: #2b6cb0; font-weight: 600;">R$ 0,00</td>
     <td class="center no-print">
       <div class="action-buttons">
-        <button class="btn-order" onclick="moverParaCima(this)">▲</button>
-        <button class="btn-order" onclick="moverParaBaixo(this)">▼</button>
+        <button class="btn-order" onclick="moverLinha(this, -1)">▲</button>
+        <button class="btn-order" onclick="moverLinha(this, 1)">▼</button>
         <button class="btn-remove">✕</button>
       </div>
     </td>
   `;
 
   const divNome = novaLinha.querySelector(".prod-nome");
-  divNome.addEventListener("input", () => {
-    gerenciarAutocompletar(divNome);
-    calcular();
-  });
+  divNome.addEventListener("input", () => { gerenciarAutocompletar(divNome); calcular(); });
 
   const inputPreco = novaLinha.querySelector(".valor-unitario");
-  inputPreco.addEventListener("input", () => {
-    aplicarMascaraDinheiro(inputPreco);
-    calcular();
-  });
+  inputPreco.addEventListener("input", () => { aplicarMascaraDinheiro(inputPreco); calcular(); });
 
   novaLinha.querySelector(".qtd-input").addEventListener("input", calcular);
   novaLinha.querySelector(".prod-obs").addEventListener("input", calcular);
-
-  novaLinha.querySelector(".btn-remove").addEventListener("click", function() {
-    if(document.querySelectorAll("#tabela-produtos tr").length > 1) {
-      novaLinha.remove();
-      calcular();
-    } else {
-      alert("O orçamento deve conter pelo menos 1 item.");
-    }
+  novaLinha.querySelector(".btn-remove").addEventListener("click", () => {
+    if(document.querySelectorAll("#tabela-produtos tr").length > 1) { novaLinha.remove(); calcular(); }
+    else alert("O orçamento precisa de ao menos 1 item.");
   });
 
   tbody.appendChild(novaLinha);
   calcular();
 }
 
-function moverParaCima(botao) {
-  const linhaAtual = botao.closest("tr");
-  const linhaAnterior = linhaAtual.previousElementSibling;
-  if (linhaAnterior) {
-    linhaAtual.parentNode.insertBefore(linhaAtual, linhaAnterior);
-    calcular();
-  }
+function moverLinha(btn, direcao) {
+  const row = btn.closest("tr");
+  if(direcao === -1 && row.previousElementSibling) row.parentNode.insertBefore(row, row.previousElementSibling);
+  if(direcao === 1 && row.nextElementSibling) row.parentNode.insertBefore(row.nextElementSibling, row);
+  calcular();
 }
 
-function moverParaBaixo(botao) {
-  const linhaAtual = botao.closest("tr");
-  const linhaSucessora = linhaAtual.nextElementSibling;
-  if (linhaSucessora) {
-    linhaAtual.parentNode.insertBefore(linhaSucessora, linhaAtual);
-    calcular();
-  }
-}
-
+// BUSCA VIA BRASIL API (E CADASTRA NO CRM AUTOMATICAMENTE SE RETORNAR SUCESSO)
 function buscarCNPJ() {
   const campoCnpj = document.getElementById("cliente-cnpj");
   const cnpj = campoCnpj.value.replace(/\D/g, '');
@@ -250,16 +251,18 @@ function buscarCNPJ() {
   if (cnpj.length === 14) {
     spinner.style.display = "block";
     campoCnpj.classList.add("campo-buscando");
-    campoNome.value = "Buscando dados corporativos...";
+    campoNome.value = "Buscando dados na nuvem corporativa...";
     
     fetch(`https://brasilapi.com.br/api/cnpj/v1/${cnpj}`)
       .then(res => { if (!res.ok) throw new Error(); return res.json(); })
       .then(data => {
-        campoNome.value = data.razao_social || data.nome_fantasia || "";
+        const razao = data.razao_social || data.nome_fantasia || "";
+        campoNome.value = razao;
+        salvarClienteNoCRM(campoCnpj.value, razao); // CRM alimentado em tempo real
         calcular();
       })
       .catch(() => {
-        alert("CNPJ não encontrado automaticamente. Preencha manualmente.");
+        alert("CNPJ não localizado automaticamente. Insira os dados do cliente manualmente.");
         campoNome.value = "";
       })
       .finally(() => {
@@ -269,9 +272,7 @@ function buscarCNPJ() {
   }
 }
 
-// ==========================================================================
-// EXPANSÃO: GESTÃO COMPLETA DE HISTÓRICO, BACKUP E DASHBOARD
-// ==========================================================================
+// SALVAR ESTADO E HISTÓRICO
 function salvarEstadoAtualNoLocalStorage() {
   const itens = [];
   document.querySelectorAll("#tabela-produtos tr").forEach(linha => {
@@ -279,9 +280,7 @@ function salvarEstadoAtualNoLocalStorage() {
     const qtd = linha.querySelector(".qtd-input").value;
     const valor = linha.querySelector(".valor-unitario").value;
     const obs = linha.querySelector(".prod-obs").value;
-    if(nome || valor !== "0,00") {
-      itens.push({ nome, qtd, valor, obs });
-    }
+    if(nome || valor !== "0,00") itens.push({ nome, qtd, valor, obs });
   });
 
   const rascunho = {
@@ -295,17 +294,14 @@ function salvarEstadoAtualNoLocalStorage() {
     condPag: document.getElementById("cond-pag").value,
     prevEntrega: document.getElementById("prev-entrega").value,
     obsGerais: document.getElementById("obs-gerais").value,
-    itens: itens
+    itens
   };
   localStorage.setItem("orc_rascunho_atual", JSON.stringify(rascunho));
 }
 
 function carregarRascunho() {
   const dados = localStorage.getItem("orc_rascunho_atual");
-  if (!dados) {
-    adicionarNovaLinha();
-    return;
-  }
+  if (!dados) { adicionarNovaLinha(); return; }
   const rascunho = JSON.parse(dados);
   
   document.getElementById("num-orcamento").textContent = rascunho.numero || "ORC-001";
@@ -321,11 +317,8 @@ function carregarRascunho() {
 
   const tbody = document.getElementById("tabela-produtos");
   tbody.innerHTML = "";
-
   if(rascunho.itens && rascunho.itens.length > 0) {
-    rascunho.itens.forEach(i => {
-      adicionarNovaLinha(i.nome, i.qtd, i.valor, i.obs);
-    });
+    rascunho.itens.forEach(i => adicionarNovaLinha(i.nome, i.qtd, i.valor, i.obs));
   } else {
     adicionarNovaLinha();
   }
@@ -337,184 +330,228 @@ function salvarEImprimir() {
   const cliente = document.getElementById("cliente-nome").value || "Cliente sem Nome";
   const total = document.getElementById("total-display").textContent;
   const dataHoje = document.getElementById("data-orcamento").value;
+  const cnpj = document.getElementById("cliente-cnpj").value;
 
-  const indexExistente = historico.findIndex(o => o.numero === numAtual);
-  
-  const dadosOrcamento = {
-    numero: numAtual,
-    cliente: cliente,
-    data: dataHoje,
-    total: total,
-    status: indexExistente >= 0 ? historico[indexExistente].status : "🟡 Pendente",
+  if(cnpj && cliente) salvarClienteNoCRM(cnpj, cliente);
+
+  const idx = historico.findIndex(o => o.numero === numAtual);
+  const dadosOrc = {
+    numero: numAtual, cliente, data: dataHoje, total,
+    status: idx >= 0 ? historico[idx].status : "🟡 Pendente",
     raw: localStorage.getItem("orc_rascunho_atual")
   };
 
-  if(indexExistente >= 0) {
-    historico[indexExistente] = dadosOrcamento;
-  } else {
-    historico.push(dadosOrcamento);
-  }
+  if(idx >= 0) historico[idx] = dadosOrc;
+  else historico.push(dadosOrc);
 
   localStorage.setItem("orc_historico", JSON.stringify(historico));
 
-  if(indexExistente === -1) {
+  if(idx === -1) {
     let proximoNum = parseInt(numAtual.replace("ORC-", "")) + 1;
-    let stringNum = "ORC-" + String(proximoNum).padStart(3, '0');
-    localStorage.setItem("proximo_numero_orc", stringNum);
+    localStorage.setItem("proximo_numero_orc", "ORC-" + String(proximoNum).padStart(3, '0'));
   }
-
   window.print();
+}
+
+// NAVEGAÇÃO E REGRAS DO MEGAPAINEL DE GESTÃO MODAL
+function abrirModalGestao() {
+  document.getElementById("modal-gestao").style.display = "block";
+  mudarAbaGestao('tab-dash');
+}
+function fecharModalGestao() { document.getElementById("modal-gestao").style.display = "none"; }
+
+function mudarAbaGestao(idAba) {
+  document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+  document.querySelectorAll(".tab-content").forEach(c => c.classList.remove("active-content"));
+  
+  const botao = Array.from(document.querySelectorAll(".tab-btn")).find(b => b.getAttribute("onclick").includes(idAba));
+  if(botao) botao.classList.add("active");
+  document.getElementById(idAba).classList.add("active-content");
+
+  if(idAba === 'tab-dash') { atualizarDashboard(); renderizarHistorico(); }
+  if(idAba === 'tab-catalogo') { renderizarCatalogo(); }
+  if(idAba === 'tab-crm') { renderizarCRM(); }
 }
 
 function atualizarDashboard() {
   const historico = JSON.parse(localStorage.getItem("orc_historico")) || [];
-  let faturamentoTotal = 0;
-  let totalAprovados = 0;
+  let faturamento = 0, totalAprovados = 0;
 
   historico.forEach(o => {
-    let valorFloat = parseFloat(o.total.replace(/[^\d,]/g, '').replace(',', '.'));
-    if (o.status === "🟢 Aprovado") {
-      faturamentoTotal += valorFloat;
-      totalAprovados++;
-    }
+    let v = parseFloat(o.total.replace(/[^\d,]/g, '').replace(',', '.'));
+    if (o.status === "🟢 Aprovado") { faturamento += v; totalAprovados++; }
   });
 
-  const totalOrcs = historico.length;
-  const ticketMedio = totalAprovados > 0 ? (faturamentoTotal / totalAprovados) : 0;
-  const taxaConversao = totalOrcs > 0 ? ((totalAprovados / totalOrcs) * 100) : 0;
-
-  document.getElementById("dash-faturamento").textContent = faturamentoTotal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-  document.getElementById("dash-qtd").textContent = totalOrcs;
-  document.getElementById("dash-ticket").textContent = ticketMedio.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-  document.getElementById("dash-conversao").textContent = `${taxaConversao.toFixed(0)}%`;
+  const tOrcs = historico.length;
+  document.getElementById("dash-faturamento").textContent = faturamento.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+  document.getElementById("dash-qtd").textContent = tOrcs;
+  document.getElementById("dash-ticket").textContent = (totalAprovados > 0 ? (faturamento / totalAprovados) : 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+  document.getElementById("dash-conversao").textContent = `${tOrcs > 0 ? ((totalAprovados / tOrcs) * 100).toFixed(0) : 0}%`;
 }
 
-function abrirModalHistorico() {
-  document.getElementById("modal-historico").style.display = "block";
-  atualizarDashboard();
-  renderizarAbasHistorico();
-}
-
-function fecharModalHistorico() {
-  document.getElementById("modal-historico").style.display = "none";
-}
-
-function renderizarAbasHistorico() {
+function renderizarHistorico() {
   const historico = JSON.parse(localStorage.getItem("orc_historico")) || [];
-  const termoBusca = document.getElementById("busca-historico").value.toLowerCase();
+  const busca = document.getElementById("busca-historico").value.toLowerCase();
   const corpo = document.getElementById("lista-historico-corpo");
   corpo.innerHTML = "";
 
-  const filtrados = historico.filter(o => 
-    o.numero.toLowerCase().includes(termoBusca) || 
-    o.cliente.toLowerCase().includes(termoBusca)
-  );
+  const filtrados = historico.filter(o => o.numero.toLowerCase().includes(busca) || o.cliente.toLowerCase().includes(busca));
+  if(!filtrados.length) { corpo.innerHTML = `<tr><td colspan="6" class="center">Nenhum registro encontrado.</td></tr>`; return; }
 
-  if(filtrados.length === 0) {
-    corpo.innerHTML = `<tr><td colspan="6" class="center">Nenhum registo encontrado.</td></tr>`;
-    return;
-  }
-
-  filtrados.forEach((orc) => {
-    // Acha o index real no array original baseado no código único do orçamento
-    const indexReal = historico.findIndex(h => h.numero === orc.numero);
+  filtrados.forEach(orc => {
+    const idxOriginal = historico.findIndex(h => h.numero === orc.numero);
     const tr = document.createElement("tr");
-    
     tr.innerHTML = `
       <td><strong>${orc.numero}</strong></td>
       <td>${orc.cliente}</td>
       <td>${orc.data}</td>
       <td style="color:#2b6cb0; font-weight:bold;">${orc.total}</td>
       <td>
-        <select onchange="mudarStatusOrcamento(${indexReal}, this.value)" class="status-select">
-          <option value="🟡 Pendente" ${orc.status === '🟡 Pendente' ? 'selected' : ''}>🟡 Pendente</option>
-          <option value="🟢 Aprovado" ${orc.status === '🟢 Aprovado' ? 'selected' : ''}>🟢 Aprovado</option>
-          <option value="🔴 Cancelado" ${orc.status === '🔴 Cancelado' ? 'selected' : ''}>🔴 Cancelado</option>
+        <select onchange="mudarStatusOrcamento(${idxOriginal}, this.value)" class="status-select">
+          <option value="🟡 Pendente" ${orc.status === '🟡 Pendente'?'selected':''}>🟡 Pendente</option>
+          <option value="🟢 Aprovado" ${orc.status === '🟢 Aprovado'?'selected':''}>🟢 Aprovado</option>
+          <option value="🔴 Cancelado" ${orc.status === '🔴 Cancelado'?'selected':''}>🔴 Cancelado</option>
         </select>
       </td>
       <td>
-        <button class="btn btn-blue" style="padding:4px 8px; font-size:11px;" onclick="restaurarOrcamentoDoHistorico(${indexReal})">📂 Abrir</button>
-        <button class="btn btn-remove" style="padding:4px 8px; font-size:11px;" onclick="deletarDoHistorico(${indexReal})">✕</button>
+        <button class="btn btn-blue" style="padding:4px 8px; font-size:11px;" onclick="restaurarOrcamentoDoHistorico(${idxOriginal})">📂 Abrir</button>
+        <button class="btn btn-remove" style="padding:4px 8px; font-size:11px;" onclick="deletarDoHistorico(${idxOriginal})">✕</button>
       </td>
     `;
     corpo.appendChild(tr);
   });
 }
 
-function mudarStatusOrcamento(index, novoStatus) {
-  let historico = JSON.parse(localStorage.getItem("orc_historico"));
-  historico[index].status = novoStatus;
-  localStorage.setItem("orc_historico", JSON.stringify(historico));
-  atualizarDashboard();
+function mudarStatusOrcamento(idx, status) {
+  let h = JSON.parse(localStorage.getItem("orc_historico")); h[idx].status = status;
+  localStorage.setItem("orc_historico", JSON.stringify(h)); atualizarDashboard();
 }
-
-function restaurarOrcamentoDoHistorico(index) {
-  const historico = JSON.parse(localStorage.getItem("orc_historico"));
-  localStorage.setItem("orc_rascunho_atual", historico[index].raw);
-  carregarRascunho();
-  fecharModalHistorico();
+function restaurarOrcamentoDoHistorico(idx) {
+  localStorage.setItem("orc_rascunho_atual", JSON.parse(localStorage.getItem("orc_historico"))[idx].raw);
+  carregarRascunho(); fecharModalGestao();
 }
-
-function deletarDoHistorico(index) {
-  if(confirm("Deseja eliminar este registro definitivo do histórico?")) {
-    let historico = JSON.parse(localStorage.getItem("orc_historico"));
-    historico.splice(index, 1);
-    localStorage.setItem("orc_historico", JSON.stringify(historico));
-    atualizarDashboard();
-    renderizarAbasHistorico();
+function deletarDoHistorico(idx) {
+  if(confirm("Eliminar este orçamento do histórico?")) {
+    let h = JSON.parse(localStorage.getItem("orc_historico")); h.splice(idx, 1);
+    localStorage.setItem("orc_historico", JSON.stringify(h)); atualizarDashboard(); renderizarHistorico();
   }
 }
 
-// BACKUPS JSON
-function exportarBackupJSON() {
+// REGRAS INTERNAS DO PRODUTO (CATÁLOGO)
+function renderizarCatalogo() {
+  const corpo = document.getElementById("lista-catalogo-corpo"); corpo.innerHTML = "";
+  const cat = obterCatalogo();
+  if(!cat.length) { corpo.innerHTML = `<tr><td colspan="3" class="center">O catálogo está vazio.</td></tr>`; return; }
+
+  cat.forEach((p, idx) => {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td><input type="text" value="${p.nome}" style="width:100%; border:none; background:transparent;" onchange="editarProdutoNoCatalogo(${idx}, 'nome', this.value)"></td>
+      <td class="right">R$ <input type="text" value="${parseFloat(p.preco).toLocaleString('pt-BR', {minimumFractionDigits:2})}" class="right" style="width:100px; border:none; background:transparent;" oninput="aplicarMascaraDinheiro(this)" onchange="editarProdutoNoCatalogo(${idx}, 'preco', this.value)"></td>
+      <td class="center"><button class="btn btn-remove" onclick="removerProdutoDoCatalogo(${idx})">✕ Remover</button></td>
+    `;
+    corpo.appendChild(tr);
+  });
+}
+
+function adicionarProdutoAoCatalogo() {
+  const nome = document.getElementById("cad-prod-nome").value.trim();
+  let precoRaw = document.getElementById("cad-prod-preco").value;
+  if(!nome || !precoRaw) { alert("Informe descrição e preço válido!"); return; }
+  
+  let preco = precoRaw.replace(/[^\d,]/g, '').replace(',', '.');
+  let cat = obterCatalogo(); cat.push({ nome, preco });
+  localStorage.setItem("app_catalogo_prod", JSON.stringify(cat));
+  
+  document.getElementById("cad-prod-nome").value = "";
+  document.getElementById("cad-prod-preco").value = "";
+  renderizarCatalogo();
+}
+
+function editarProdutoNoCatalogo(idx, campo, v) {
+  let cat = obterCatalogo();
+  if(campo === 'preco') v = v.replace(/[^\d,]/g, '').replace(',', '.');
+  cat[idx][campo] = v; localStorage.setItem("app_catalogo_prod", JSON.stringify(cat));
+}
+function removerProdutoDoCatalogo(idx) {
+  let cat = obterCatalogo(); cat.splice(idx, 1);
+  localStorage.setItem("app_catalogo_prod", JSON.stringify(cat)); renderizarCatalogo();
+}
+
+// REGRAS INTERNAS DO CRM (CLIENTES)
+function renderizarCRM() {
+  const corpo = document.getElementById("lista-crm-corpo"); corpo.innerHTML = "";
+  const clientes = obterClientes();
+  if(!clientes.length) { corpo.innerHTML = `<tr><td colspan="3" class="center">Nenhum cliente cadastrado ainda.</td></tr>`; return; }
+
+  clientes.forEach((c, idx) => {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td><strong>${c.cnpj}</strong></td>
+      <td><input type="text" value="${c.nome}" style="width:100%; border:none; background:transparent;" onchange="editarClienteNoCRM(${idx}, this.value)"></td>
+      <td class="center"><button class="btn btn-remove" onclick="removerClienteDoCRM(${idx})">✕ Excluir</button></td>
+    `;
+    corpo.appendChild(tr);
+  });
+}
+function salvarClienteManualmente() {
+  const cnpj = document.getElementById("crm-cnpj").value.trim();
+  const nome = document.getElementById("crm-nome").value.trim();
+  if(!cnpj || !nome) { alert("Preencha todos os campos do CRM!"); return; }
+  salvarClienteNoCRM(cnpj, nome);
+  document.getElementById("crm-cnpj").value = ""; document.getElementById("crm-nome").value = "";
+  renderizarCRM();
+}
+function editarClienteNoCRM(idx, n) { let c = obterClientes(); c[idx].nome = n; localStorage.setItem("app_clientes_crm", JSON.stringify(c)); }
+function removerClienteDoCRM(idx) { let c = obterClientes(); c.splice(idx, 1); localStorage.setItem("app_clientes_crm", JSON.stringify(c)); renderizarCRM(); }
+
+// BACKUP TOTAL DO SISTEMA (TUDO NUM SÓ ARQUIVO JSON)
+function exportarBackupCompleto() {
   const dados = {
     historico: JSON.parse(localStorage.getItem("orc_historico")) || [],
+    catalogo: obterCatalogo(),
+    crm: obterClientes(),
     proximo: localStorage.getItem("proximo_numero_orc") || "ORC-001",
     logo: localStorage.getItem("orc_logo_custom") || ""
   };
   const blob = new Blob([JSON.stringify(dados, null, 2)], { type: "application/json" });
-  const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
-  a.href = url;
-  a.download = `backup_orcamentos_${new Date().toISOString().slice(0,10)}.json`;
+  a.href = URL.createObjectURL(blob);
+  a.download = `backup_sistema_vendas_${new Date().toISOString().slice(0,10)}.json`;
   a.click();
 }
 
-function importarBackupJSON(input) {
+function importarBackupCompleto(input) {
   if (input.files && input.files[0]) {
     const leitor = new FileReader();
     leitor.onload = function(e) {
       try {
-        const dados = JSON.parse(e.target.result);
-        if(dados.historico) {
-          localStorage.setItem("orc_historico", JSON.stringify(dados.historico));
-          if(dados.proximo) localStorage.setItem("proximo_numero_orc", dados.proximo);
-          if(dados.logo) localStorage.setItem("orc_logo_custom", dados.logo);
-          alert("Backup importado com sucesso!");
-          atualizarDashboard();
-          renderizarAbasHistorico();
-          carregarLogoSalvo();
-          carregarRascunho();
-        }
-      } catch(err) {
-        alert("Erro ao ler arquivo de backup inválido.");
-      }
+        const d = JSON.parse(e.target.result);
+        if(d.historico) localStorage.setItem("orc_historico", JSON.stringify(d.historico));
+        if(d.catalogo) localStorage.setItem("app_catalogo_prod", JSON.stringify(d.catalogo));
+        if(d.crm) localStorage.setItem("app_clientes_crm", JSON.stringify(d.crm));
+        if(d.proximo) localStorage.setItem("proximo_numero_orc", d.proximo);
+        if(d.logo) localStorage.setItem("orc_logo_custom", d.logo);
+        
+        alert("Todos os bancos de dados foram restaurados com sucesso!");
+        mudarAbaGestao('tab-dash'); carregarRascunho();
+        const customLogo = localStorage.getItem("orc_logo_custom");
+        if(customLogo) document.getElementById("logo-img").src = customLogo;
+      } catch(err) { alert("Arquivo JSON inválido."); }
     };
     leitor.readAsText(input.files[0]);
   }
 }
 
-// ALTERNA LAYOUT ENTRE A4 E CUPOM 80MM
+// FUNÇÕES DE INTERFACE ADICIONAIS
 function alternarLayoutImpressao() {
   const card = document.getElementById("orcamento-card");
   const btn = document.getElementById("btn-layout-print");
   if(card.classList.contains("layout-a4")) {
-    card.classList.remove("layout-a4");
-    card.classList.add("layout-cupom");
+    card.classList.remove("layout-a4"); card.classList.add("layout-cupom");
     btn.innerHTML = "🖨️ Layout: Cupom 80mm";
   } else {
-    card.classList.remove("layout-cupom");
-    card.classList.add("layout-a4");
+    card.classList.remove("layout-cupom"); card.classList.add("layout-a4");
     btn.innerHTML = "📄 Layout: A4";
   }
 }
@@ -530,77 +567,43 @@ function enviarWhatsApp() {
   const detalheParcela = document.getElementById("parcelas-detalhe").textContent;
 
   let itensTexto = "";
-  document.querySelectorAll("#tabela-produtos tr").forEach((linha) => {
+  document.querySelectorAll("#tabela-produtos tr").forEach(linha => {
     const divNome = linha.querySelector(".prod-nome");
     const inputQtd = linha.querySelector(".qtd-input");
-    if (divNome && divNome.textContent) {
-      itensTexto += `*${inputQtd.value}x* ${divNome.textContent}\n`;
-    }
+    if (divNome && divNome.textContent) itensTexto += `*${inputQtd.value}x* ${divNome.textContent}\n`;
   });
 
-  const textoMensagem = 
-    `Olá, *${nomeCliente}*! Segue o resumo do seu orçamento:\n\n` +
-    `📄 *Código:* ${numOrcamento}\n` +
-    `🛍️ *Itens:*\n${itensTexto}\n` +
-    `💳 *Forma de Pagamento:* ${condPagamentoTexto} (${detalheParcela})\n` +
-    `💰 *VALOR TOTAL FINAL:* ${totalGeral}\n\n` +
-    `Qualquer dúvida estou à disposição!`;
-
-  const linkBase = whatsVendedor ? `https://api.whatsapp.com/send?phone=55${whatsVendedor}&text=` : `https://api.whatsapp.com/send?text=`;
-  window.open(linkBase + encodeURIComponent(textoMensagem), '_blank');
+  const msg = `Olá, *${nomeCliente}*! Segue o resumo do seu orçamento:\n\n📄 *Código:* ${numOrcamento}\n🛍️ *Itens:*\n${itensTexto}\n💳 *Forma de Pagamento:* ${condPagamentoTexto} (${detalheParcela})\n💰 *VALOR TOTAL FINAL:* ${totalGeral}\n\nQualquer dúvida estou à disposição!`;
+  window.open((whatsVendedor ? `https://api.whatsapp.com/send?phone=55${whatsVendedor}&text=` : `https://api.whatsapp.com/send?text=`) + encodeURIComponent(msg), '_blank');
 }
 
 function alterarLogo(input) {
   if (input.files && input.files[0]) {
     const leitor = new FileReader();
-    leitor.onload = function(e) {
-      document.getElementById("logo-img").src = e.target.result;
-      localStorage.setItem("orc_logo_custom", e.target.result);
-    };
+    leitor.onload = function(e) { document.getElementById("logo-img").src = e.target.result; localStorage.setItem("orc_logo_custom", e.target.result); };
     leitor.readAsDataURL(input.files[0]);
   }
 }
 
-function carregarLogoSalvo() {
-  const logoSalvo = localStorage.getItem("orc_logo_custom");
-  if(logoSalvo) document.getElementById("logo-img").src = logoSalvo;
-}
-
-function carregarDataAtual() {
-  const campoData = document.getElementById("data-orcamento");
-  const hoje = new Date();
-  campoData.value = hoje.toLocaleDateString('pt-BR', { day: 'numeric', month: 'long', year: 'numeric' });
-}
-
 function alternarModoEscuro() {
   document.body.classList.toggle("dark-theme");
-  const btn = document.getElementById("btn-dark-mode");
-  btn.innerHTML = document.body.classList.contains("dark-theme") ? "☀️ Modo Claro" : "🌙 Modo Escuro";
+  document.getElementById("btn-dark-mode").innerHTML = document.body.classList.contains("dark-theme") ? "☀️ Modo Claro" : "🌙 Modo Escuro";
 }
 
 function limparOrcamento() {
-  if (confirm("Deseja redefinir os campos da tela atual?")) {
+  if (confirm("Redefinir orçamento atual?")) {
     localStorage.removeItem("orc_rascunho_atual");
-    
-    document.getElementById("cliente-cnpj").value = "";
-    document.getElementById("cliente-nome").value = "";
-    document.getElementById("vendedor-whats").value = "";
-    document.getElementById("responsavel-nome").value = "";
-    document.getElementById("valor-desconto").value = "0";
-    document.getElementById("tipo-desconto").value = "nenhum";
-    document.getElementById("cond-pag").selectedIndex = 0;
-    document.getElementById("prev-entrega").value = "Imediato";
-    
-    let proxNum = localStorage.getItem("proximo_numero_orc") || "ORC-001";
-    document.getElementById("num-orcamento").textContent = proxNum;
-
-    document.getElementById("tabela-produtos").innerHTML = "";
-    adicionarNovaLinha();
+    document.getElementById("cliente-cnpj").value = ""; document.getElementById("cliente-nome").value = "";
+    document.getElementById("vendedor-whats").value = ""; document.getElementById("responsavel-nome").value = "";
+    document.getElementById("valor-desconto").value = "0"; document.getElementById("tipo-desconto").value = "nenhum";
+    document.getElementById("cond-pag").selectedIndex = 0; document.getElementById("prev-entrega").value = "Imediato";
+    document.getElementById("num-orcamento").textContent = localStorage.getItem("proximo_numero_orc") || "ORC-001";
+    document.getElementById("tabela-produtos").innerHTML = ""; adicionarNovaLinha();
   }
 }
 
 window.onload = function() {
-  carregarDataAtual();
-  carregarLogoSalvo();
-  carregarRascunho();
+  document.getElementById("data-orcamento").value = new Date().toLocaleDateString('pt-BR', { day: 'numeric', month: 'long', year: 'numeric' });
+  const customLogo = localStorage.getItem("orc_logo_custom"); if(customLogo) document.getElementById("logo-img").src = customLogo;
+  obterCatalogo(); car壊 = obterClientes(); carger = carregarRascunho();
 };
