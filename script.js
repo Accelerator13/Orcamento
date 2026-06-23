@@ -1,4 +1,4 @@
-// LISTA PADRÃO INICIAL (Caso o LocalStorage esteja limpo)
+// LISTA PADRÃO INICIAL
 const CATALOGO_PADRAO = [
   { nome: "SSD Kingston NV2 1TB NVMe M.2", preco: "389.90" },
   { nome: "SSD Kingston NV2 500GB NVMe M.2", preco: "249.00" },
@@ -23,7 +23,6 @@ const OPCOES_PAGAMENTO = {
 
 let divAtivaAutocompletar = null;
 
-// INICIALIZADORES DE BANCO DE DADOS LOCAL
 function obterCatalogo() {
   let cat = localStorage.getItem("app_catalogo_prod");
   if(!cat) {
@@ -51,7 +50,7 @@ function salvarClienteNoCRM(cnpj, nome) {
   localStorage.setItem("app_clientes_crm", JSON.stringify(clientes));
 }
 
-// CÁLCULO GERAL E MOTOR DE REGRAS
+// CÁLCULO GERAL E TRAVA DE DESCONTO DE 20%
 function calcular() {
   const linhas = document.querySelectorAll("#tabela-produtos tr");
   let subtotalGeral = 0;
@@ -60,7 +59,7 @@ function calcular() {
     const inputQtd = linha.querySelector(".qtd-input");
     const inputValor = linha.querySelector(".valor-unitario"); 
     const inputObs = linha.querySelector(".prod-obs");
-    const celulaSubtotal = inline_obterSubtotalCell(linha);
+    const celulaSubtotal = linha.querySelector(".subtotal-cell");
 
     if (inputObs && inputObs.value.toLowerCase().match(/(sob )?encomenda/)) {
       linha.classList.add("linha-encomenda");
@@ -80,7 +79,6 @@ function calcular() {
 
   document.getElementById("subtotal-display").textContent = subtotalGeral.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
-  // REGRAS DE TRAVA DE DESCONTO (MÁXIMO 20%)
   const tipoDesconto = document.getElementById("tipo-desconto").value;
   const inputValorDesconto = document.getElementById("valor-desconto");
   let valorDescontoDigitado = parseFloat(inputValorDesconto.value) || 0;
@@ -122,15 +120,13 @@ function calcular() {
   salvarEstadoAtualNoLocalStorage();
 }
 
-function inline_obterSubtotalCell(linha) { return linha.querySelector(".subtotal-cell"); }
-
 function aplicarMascaraDinheiro(input) {
   let valor = input.value.replace(/\D/g, '');
   if(valor === "") valor = "0";
   input.value = (parseFloat(valor) / 100).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
-// INTERFACE DE AUTOCOMPLETAR PRODUTOS DO CATÁLOGO
+// AUTOCOMPLETAR PRODUTOS DO CATÁLOGO
 function gerenciarAutocompletar(divEditavel) {
   divAtivaAutocompletar = divEditavel;
   const texto = divEditavel.textContent.trim().toLowerCase();
@@ -197,7 +193,7 @@ document.addEventListener("click", (e) => {
   }
 });
 
-// CRIAÇÃO DE LINHAS DE PRODUTOS
+// ADICIONAR NOVA LINHA DE PRODUTO
 function adicionarNovaLinha(nome = "", qtd = 1, valor = "0,00", obs = "") {
   const tbody = document.getElementById("tabela-produtos");
   const novaLinha = document.createElement("tr");
@@ -241,7 +237,7 @@ function moverLinha(btn, direcao) {
   calcular();
 }
 
-// BUSCA VIA BRASIL API (E CADASTRA NO CRM AUTOMATICAMENTE SE RETORNAR SUCESSO)
+// CONEXÃO COM A BRASIL API PARA BUSCA DE CNPJ
 function buscarCNPJ() {
   const campoCnpj = document.getElementById("cliente-cnpj");
   const cnpj = campoCnpj.value.replace(/\D/g, '');
@@ -258,7 +254,7 @@ function buscarCNPJ() {
       .then(data => {
         const razao = data.razao_social || data.nome_fantasia || "";
         campoNome.value = razao;
-        salvarClienteNoCRM(campoCnpj.value, razao); // CRM alimentado em tempo real
+        salvarClienteNoCRM(campoCnpj.value, razao);
         calcular();
       })
       .catch(() => {
@@ -272,7 +268,7 @@ function buscarCNPJ() {
   }
 }
 
-// SALVAR ESTADO E HISTÓRICO
+// SALVAR ESTADO ATUAL E HISTÓRICO COM TIMESTAMP (REGRA DOS 3 DIAS)
 function salvarEstadoAtualNoLocalStorage() {
   const itens = [];
   document.querySelectorAll("#tabela-produtos tr").forEach(linha => {
@@ -282,6 +278,8 @@ function salvarEstadoAtualNoLocalStorage() {
     const obs = linha.querySelector(".prod-obs").value;
     if(nome || valor !== "0,00") itens.push({ nome, qtd, valor, obs });
   });
+
+  const linkPagamento = document.getElementById("link-pagamento-input") ? document.getElementById("link-pagamento-input").value : "";
 
   const rascunho = {
     numero: document.getElementById("num-orcamento").textContent,
@@ -294,6 +292,7 @@ function salvarEstadoAtualNoLocalStorage() {
     condPag: document.getElementById("cond-pag").value,
     prevEntrega: document.getElementById("prev-entrega").value,
     obsGerais: document.getElementById("obs-gerais").value,
+    linkPagamento: linkPagamento,
     itens
   };
   localStorage.setItem("orc_rascunho_atual", JSON.stringify(rascunho));
@@ -314,6 +313,9 @@ function carregarRascunho() {
   document.getElementById("cond-pag").value = rascunho.condPag || "vista";
   document.getElementById("prev-entrega").value = rascunho.prevEntrega || "Imediato";
   document.getElementById("obs-gerais").value = rascunho.obsGerais || "";
+  if (document.getElementById("link-pagamento-input")) {
+    document.getElementById("link-pagamento-input").value = rascunho.linkPagamento || "";
+  }
 
   const tbody = document.getElementById("tabela-produtos");
   tbody.innerHTML = "";
@@ -335,10 +337,16 @@ function salvarEImprimir() {
   if(cnpj && cliente) salvarClienteNoCRM(cnpj, cliente);
 
   const idx = historico.findIndex(o => o.numero === numAtual);
+  const rascunhoSalvo = JSON.parse(localStorage.getItem("orc_rascunho_atual")) || {};
+
   const dadosOrc = {
-    numero: numAtual, cliente, data: dataHoje, total,
+    numero: numAtual, 
+    cliente, 
+    data: dataHoje, 
+    total,
     status: idx >= 0 ? historico[idx].status : "🟡 Pendente",
-    raw: localStorage.getItem("orc_rascunho_atual")
+    timestampCriacao: idx >= 0 ? (historico[idx].timestampCriacao || Date.now()) : Date.now(),
+    raw: JSON.stringify(rascunhoSalvo)
   };
 
   if(idx >= 0) historico[idx] = dadosOrc;
@@ -353,7 +361,7 @@ function salvarEImprimir() {
   window.print();
 }
 
-// NAVEGAÇÃO E REGRAS DO MEGAPAINEL DE GESTÃO MODAL
+// NAVEGAÇÃO DO PAINEL GESTÃO MODAL
 function abrirModalGestao() {
   document.getElementById("modal-gestao").style.display = "block";
   mudarAbaGestao('tab-dash');
@@ -389,6 +397,7 @@ function atualizarDashboard() {
   document.getElementById("dash-conversao").textContent = `${tOrcs > 0 ? ((totalAprovados / tOrcs) * 100).toFixed(0) : 0}%`;
 }
 
+// RENDEREZAR HISTÓRICO COM REGRA DE ALERTA DE 3 DIAS (72H)
 function renderizarHistorico() {
   const historico = JSON.parse(localStorage.getItem("orc_historico")) || [];
   const busca = document.getElementById("busca-historico").value.toLowerCase();
@@ -400,9 +409,28 @@ function renderizarHistorico() {
 
   filtrados.forEach(orc => {
     const idxOriginal = historico.findIndex(h => h.numero === orc.numero);
+    let badgeTempoHtml = "";
+    let exibirBotaoFollowUp = false;
+
+    if (orc.status === "🟡 Pendente" && orc.timestampCriacao) {
+      const horasPassadas = (Date.now() - orc.timestampCriacao) / (1000 * 60 * 60);
+      if (horasPassadas < 24) {
+        badgeTempoHtml = `<span class="badge-tempo fresco">🟢 Fresco</span>`;
+      } else if (horasPassadas >= 24 && horasPassadas < 72) {
+        badgeTempoHtml = `<span class="badge-tempo morno">🟡 Morno</span>`;
+      } else {
+        badgeTempoHtml = `<span class="badge-tempo critico">🔴 Alerta (+3d)</span>`;
+        exibirBotaoFollowUp = true;
+      }
+    } else {
+      badgeTempoHtml = `<span class="badge-tempo concluido">✓ Resolvido</span>`;
+    }
+
     const tr = document.createElement("tr");
+    if (exibirBotaoFollowUp) tr.className = "linha-alerta-critica";
+
     tr.innerHTML = `
-      <td><strong>${orc.numero}</strong></td>
+      <td><strong>${orc.numero}</strong><br>${badgeTempoHtml}</td>
       <td>${orc.cliente}</td>
       <td>${orc.data}</td>
       <td style="color:#2b6cb0; font-weight:bold;">${orc.total}</td>
@@ -414,12 +442,45 @@ function renderizarHistorico() {
         </select>
       </td>
       <td>
-        <button class="btn btn-blue" style="padding:4px 8px; font-size:11px;" onclick="restaurarOrcamentoDoHistorico(${idxOriginal})">📂 Abrir</button>
-        <button class="btn btn-remove" style="padding:4px 8px; font-size:11px;" onclick="deletarDoHistorico(${idxOriginal})">✕</button>
+        <div style="display:flex; gap:4px;">
+          <button class="btn btn-blue" style="padding:4px 8px; font-size:11px;" onclick="restaurarOrcamentoDoHistorico(${idxOriginal})">📂 Abrir</button>
+          ${exibirBotaoFollowUp ? `<button class="btn btn-green" style="padding:4px 8px; font-size:11px; background-color:#e53e3e;" onclick="dispararWhatsFollowUp(${idxOriginal})">📣 Cobrar</button>` : ''}
+          <button class="btn btn-remove" style="padding:4px 8px; font-size:11px;" onclick="deletarDoHistorico(${idxOriginal})">✕</button>
+        </div>
       </td>
     `;
     corpo.appendChild(tr);
   });
+}
+
+// TEXTO INTELIGENTE COM GANCHO DE HARDWARE PARA WHATSAPP
+function dispararWhatsFollowUp(idx) {
+  const historico = JSON.parse(localStorage.getItem("orc_historico")) || [];
+  const orc = historico[idx];
+  if(!orc || !orc.raw) return;
+
+  const rawData = JSON.parse(orc.raw);
+  const clienteNome = orc.cliente;
+  const totalGeral = orc.total;
+  const vendedor = rawData.vendedor || "Consultor de Vendas";
+  const telefoneVendedor = rawData.whatsVendedor ? rawData.whatsVendedor.replace(/\D/g, '') : "";
+
+  const primeiroHardware = rawData.itens && rawData.itens.length > 0 ? rawData.itens[0].nome : "os componentes de tecnologia";
+
+  let msg = `Fala, *${clienteNome}*! Tudo bem?\n\n`;
+  msg += `Aqui é o *${vendedor}* da *Online Shopping*. 🚀\n\n`;
+  msg += `Estava a rever os meus relatórios aqui no sistema e notei que o seu orçamento para aquele setup com o *${primeiroHardware}* completou 3 dias hoje.\n\n`;
+  msg += `Como o mercado de hardware e semicondutores flutua muito rápido, passei para te avisar que eu consegui travar aquele valor de *${totalGeral}* por mais hoje para ti. 😉\n\n`;
+  
+  if (rawData.linkPagamento) {
+    msg += `Se quiseres garantir o estoque e mandar as peças direto para a nossa bancada de montagem técnica, podes efetuar o pagamento direto por este link seguro: ${rawData.linkPagamento}\n\n`;
+  } else {
+    msg += `Consegues dar um pulo aqui no shopping hoje ou preferes que eu te gere uma chave Pix por aqui para garantires as peças? 🏁\n\n`;
+  }
+  
+  msg += `Fico no teu aguardo! Tamo junto.`;
+
+  window.open((telefoneVendedor ? `https://api.whatsapp.com/send?phone=55${telefoneVendedor}&text=` : `https://api.whatsapp.com/send?text=`) + encodeURIComponent(msg), '_blank');
 }
 
 function mudarStatusOrcamento(idx, status) {
@@ -437,7 +498,7 @@ function deletarDoHistorico(idx) {
   }
 }
 
-// REGRAS INTERNAS DO PRODUTO (CATÁLOGO)
+// GERENCIADOR DO CATÁLOGO DE PRODUTOS
 function renderizarCatalogo() {
   const corpo = document.getElementById("lista-catalogo-corpo"); corpo.innerHTML = "";
   const cat = obterCatalogo();
@@ -478,7 +539,7 @@ function removerProdutoDoCatalogo(idx) {
   localStorage.setItem("app_catalogo_prod", JSON.stringify(cat)); renderizarCatalogo();
 }
 
-// REGRAS INTERNAS DO CRM (CLIENTES)
+// GERENCIADOR DO CRM DE CLIENTES
 function renderizarCRM() {
   const corpo = document.getElementById("lista-crm-corpo"); corpo.innerHTML = "";
   const clientes = obterClientes();
@@ -505,7 +566,7 @@ function salvarClienteManualmente() {
 function editarClienteNoCRM(idx, n) { let c = obterClientes(); c[idx].nome = n; localStorage.setItem("app_clientes_crm", JSON.stringify(c)); }
 function removerClienteDoCRM(idx) { let c = obterClientes(); c.splice(idx, 1); localStorage.setItem("app_clientes_crm", JSON.stringify(c)); renderizarCRM(); }
 
-// BACKUP TOTAL DO SISTEMA (TUDO NUM SÓ ARQUIVO JSON)
+// BACKUP CENTRALIZADO JSON
 function exportarBackupCompleto() {
   const dados = {
     historico: JSON.parse(localStorage.getItem("orc_historico")) || [],
@@ -543,7 +604,7 @@ function importarBackupCompleto(input) {
   }
 }
 
-// FUNÇÕES DE INTERFACE ADICIONAIS
+// LAYOUTS DE IMPRESSÃO, INTERFACE E WHATSAPP NORMAL
 function alternarLayoutImpressao() {
   const card = document.getElementById("orcamento-card");
   const btn = document.getElementById("btn-layout-print");
@@ -597,6 +658,7 @@ function limparOrcamento() {
     document.getElementById("vendedor-whats").value = ""; document.getElementById("responsavel-nome").value = "";
     document.getElementById("valor-desconto").value = "0"; document.getElementById("tipo-desconto").value = "nenhum";
     document.getElementById("cond-pag").selectedIndex = 0; document.getElementById("prev-entrega").value = "Imediato";
+    if(document.getElementById("link-pagamento-input")) document.getElementById("link-pagamento-input").value = "";
     document.getElementById("num-orcamento").textContent = localStorage.getItem("proximo_numero_orc") || "ORC-001";
     document.getElementById("tabela-produtos").innerHTML = ""; adicionarNovaLinha();
   }
@@ -605,5 +667,80 @@ function limparOrcamento() {
 window.onload = function() {
   document.getElementById("data-orcamento").value = new Date().toLocaleDateString('pt-BR', { day: 'numeric', month: 'long', year: 'numeric' });
   const customLogo = localStorage.getItem("orc_logo_custom"); if(customLogo) document.getElementById("logo-img").src = customLogo;
-  obterCatalogo(); car壊 = obterClientes(); carger = carregarRascunho();
+  obterCatalogo(); obterClientes(); carregarRascunho();
 };
+
+// ==========================================================================
+// ASSISTENTE DE IA PARA WHATSAPP (CORRIGIDO)
+// ==========================================================================
+
+// Abre a janela do gerador de IA
+function abrirGeradorIA() {
+  document.getElementById("modal-ia").style.display = "block";
+}
+
+// Fecha a janela do gerador de IA
+function fecharGeradorIA() {
+  document.getElementById("modal-ia").style.display = "none";
+}
+
+async function gerarTextoComIA() {
+  const objetivo = document.getElementById("ia-objetivo").value;
+  const tom = document.getElementById("ia-tom").value;
+  const campoResultado = document.getElementById("ia-resultado");
+
+  if (!objetivo) {
+    alert("Por favor, digite o objetivo da mensagem!");
+    return;
+  }
+
+  campoResultado.value = "🤖 A IA está a processar a melhor estratégia... Por favor, aguarde.";
+
+  // ⚠️ Substitua pelo seu token real gerado no Google AI Studio
+  const GEMINI_API_KEY = "AQ.Ab8RN6LTe6pa-yV55QzjQLi5PY8Kwj_DLYBpfQE-n15ThyVJgw"; 
+  
+  // URL corrigida para compatibilidade total com chaves do AI Studio
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`;
+
+  const prompt = `Você é um especialista em copywriting para WhatsApp focado em vendas de hardware e tecnologia.
+Gere uma mensagem altamente persuasiva para o WhatsApp com base nisto:
+- Objetivo: ${objetivo}
+- Tom do texto: ${tom}
+
+Regras obrigatórias de formatação:
+1. Use quebras de linha para deixar o texto leve no celular.
+2. Use negritos do WhatsApp (*texto*) nas palavras mais importantes.
+3. Use emojis adequados (computadores, foguetes, checkmarks), sem exagerar.
+4. Termine com uma Chamada para Ação (CTA) clara.
+Não adicione nenhuma introdução como 'Aqui está o seu texto:', devolva apenas a mensagem pronta para enviar.`;
+
+  try {
+    const response = await fetch(url, {
+      method: "POST",
+      headers: { 
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        contents: [{ parts: [{ text: prompt }] }]
+      })
+    });
+
+    const data = await response.json();
+    
+    if (data.error) {
+      console.error("Erro detalhado da API do Gemini:", data.error);
+      campoResultado.value = `Erro da API: ${data.error.message}\n\nVerifique se o seu token foi colado corretamente e está ativo no painel do Google AI Studio.`;
+      return;
+    }
+
+    if (data.candidates && data.candidates[0].content.parts[0].text) {
+      campoResultado.value = data.candidates[0].content.parts[0].text;
+    } else {
+      campoResultado.value = "Erro ao processar a resposta da IA. Pressione F12 para ver os detalhes no console do desenvolvedor.";
+    }
+
+  } catch (error) {
+    console.error("Erro ao conectar com a API:", error);
+    campoResultado.value = "Erro de conexão com a API do Gemini. Verifique a sua internet.";
+  }
+}

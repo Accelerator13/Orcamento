@@ -8,12 +8,12 @@
 </head>
 <body>
 
-  <!-- TOPBAR: BOTÕES DE AÇÃO -->
   <div class="topbar no-print">
     <div class="topbar-left">
       <button id="btn-dark-mode" class="btn btn-gray" onclick="alternarModoEscuro()">🌙 Modo Escuro</button>
       <button class="btn btn-gray" onclick="limparOrcamento()">🗑️ Limpar Tela</button>
       <button class="btn btn-gray" onclick="abrirModalGestao()">⚙️ Painel de Gestão Avançada</button>
+      <button class="btn btn-blue" onclick="abrirGeradorIA()">🤖 Gerador IA</button>
     </div>
     <div class="topbar-right">
       <button id="btn-layout-print" class="btn btn-gray" onclick="alternarLayoutImpressao()">📄 Layout: A4</button>
@@ -22,10 +22,8 @@
     </div>
   </div>
 
-  <!-- CARD PRINCIPAL DO ORÇAMENTO -->
   <div id="orcamento-card" class="card layout-a4">
     
-    <!-- CABEÇALHO -->
     <div class="header">
       <div class="header-left">
         <label for="upload-logo" style="cursor: pointer;" title="Clique para mudar o Logo">
@@ -43,12 +41,10 @@
       </div>
     </div>
 
-    <!-- DATA -->
     <div style="margin-top: 20px; font-size: 14px;" class="date-row">
       <strong>Uberlândia-MG,</strong> <input type="text" id="data-orcamento" style="border:none; font-size:14px; width:200px; font-family:inherit;" readonly>
     </div>
 
-    <!-- DADOS DO CLIENTE -->
     <div class="client-box">
       <div class="field" style="position: relative;">
         <label for="cliente-cnpj">CNPJ (Cole ou digite)</label>
@@ -64,15 +60,18 @@
         <label for="vendedor-whats">WhatsApp do Vendedor</label>
         <input type="text" id="vendedor-whats" placeholder="Seu número (Ex: 34999999999)">
       </div>
-      <div class="field" style="grid-column: span 3;">
+      <div class="field" style="grid-column: span 2;">
         <label for="responsavel-nome">Responsável pela Informação</label>
         <input type="text" id="responsavel-nome" placeholder="Nome do vendedor">
+      </div>
+      <div class="field" style="grid-column: span 1;">
+        <label for="link-pagamento-input">Link de Pagamento / Pix (Opcional)</label>
+        <input type="text" id="link-pagamento-input" placeholder="https://link.mercadopago...">
       </div>
     </div>
 
     <p class="intro" style="font-size: 14px; margin: 25px 0 15px 0;">Conforme solicitação estamos enviando nossos melhores preços:</p>
 
-    <!-- TABELA DE PRODUTOS -->
     <table>
       <thead>
         <tr>
@@ -85,8 +84,7 @@
         </tr>
       </thead>
       <tbody id="tabela-produtos">
-        <!-- Controlado via JS -->
-      </tbody>
+        </tbody>
       <tfoot>
         <tr>
           <td colspan="4" class="gray">Subtotal</td>
@@ -144,7 +142,6 @@
       <input type="number" id="valor-desconto" value="0" min="0" oninput="calcular()">
     </div>
 
-    <!-- OBSERVAÇÕES GERAIS -->
     <div class="obs-box">
       <label class="obs-label">Observações / Condições Gerais</label>
       <textarea id="obs-gerais" rows="10">
@@ -154,11 +151,10 @@
 • Itens em vermelho não conseguimos devolução, pois é sob encomenda pra sua compra;
 • Valores apenas para faturamento no estado de Minas Gerais, demais estados sujeito à alteração;
 • Valor mínimo para faturamento boleto R$ 150,00;
-• Valor mínimo para entrega CIF (Grátis) in Uberlândia-MG de R$ 500,00.
+• Valor mínimo para entrega CIF (Grátis) em Uberlândia-MG de R$ 500,00.
 • Em Casos de compra de produtos específicos com os nossos fornecedores para cumprir a demanda do cliente, de produtos cotados que não temos em nossos estoques, não aceitamos troca e nem devolução do mesmo. Favor avaliar e validar antes este orçamento com o seu departamento de TI ou áreas afins.</textarea>
     </div>
 
-    <!-- ASSINATURA -->
     <div class="signature-container">
       <div class="signature-line"></div>
       <div class="signature-title">Responsável Comercial - Online Shopping</div>
@@ -166,10 +162,8 @@
 
   </div>
 
-  <!-- CONTAINER DE SUGESTÕES (AUTOCOMPLETAR) -->
   <div id="autocomplete-list" class="autocomplete-suggestions no-print"></div>
 
-  <!-- MEGA MODAL DE GESTÃO AVANÇADA -->
   <div id="modal-gestao" class="modal no-print">
     <div class="modal-content" style="width: 85%; max-width: 1200px;">
       <div class="modal-header">
@@ -181,7 +175,6 @@
         <span class="close-modal" onclick="fecharModalGestao()">&times;</span>
       </div>
       
-      <!-- ABA 1: DASHBOARD E HISTÓRICO -->
       <div id="tab-dash" class="tab-content active-content">
         <div class="dashboard-grid">
           <div class="dash-card">
@@ -216,11 +209,11 @@
           <table class="table-historico">
             <thead>
               <tr>
-                <th>Código</th>
+                <th>Código / Status</th>
                 <th>Cliente</th>
                 <th>Data</th>
                 <th>Total</th>
-                <th>Status</th>
+                <th>Alterar Status</th>
                 <th>Ações</th>
               </tr>
             </thead>
@@ -229,7 +222,6 @@
         </div>
       </div>
 
-      <!-- ABA 2: GERENCIADOR DE CATÁLOGO -->
       <div id="tab-catalogo" class="tab-content">
         <div class="cadastro-inline-box">
           <h4>Cadastrar Novo Produto</h4>
@@ -253,7 +245,6 @@
         </div>
       </div>
 
-      <!-- ABA 3: CARTEIRA DE CLIENTES (CRM) -->
       <div id="tab-crm" class="tab-content">
         <div class="cadastro-inline-box">
           <h4>Cadastrar / Atualizar Cliente</h4>
@@ -280,6 +271,38 @@
     </div>
   </div>
 
+  </div>
+  </div>
+
   <script src="script.js"></script>
+
+  <div id="modal-ia" class="modal no-print" style="display: none;">
+    <div class="modal-content" style="width: 50%; max-width: 600px;">
+      <div class="modal-header">
+        <h3>🤖 Assistente de Copy com IA</h3>
+        <span class="close-modal" onclick="fecharGeradorIA()">&times;</span>
+      </div>
+      <div class="modal-body" style="display: flex; flex-direction: column; gap: 12px;">
+        
+        <label><strong>Objetivo da Mensagem:</strong></label>
+        <input type="text" id="ia-objetivo" placeholder="Ex: Cobrar cliente sumido, Oferecer desconto no Ryzen 5...">
+
+        <label><strong>Tom da Conversa:</strong></label>
+        <select id="ia-tom">
+          <option value="profissional e polido">💼 Profissional</option>
+          <option value="descontraído, amigável e gamer">🎮 Descontraído / Gamer</option>
+          <option value="urgente e focado em escassez">🚨 Urgente (Últimas unidades)</option>
+        </select>
+
+        <button class="btn btn-blue" onclick="gerarTextoComIA()">✨ Gerar Mensagem Magnética</button>
+
+        <label><strong>Resultado da IA:</strong></label>
+        <textarea id="ia-resultado" rows="8" placeholder="O texto gerado aparecerá aqui..." style="width: 100%; box-sizing: border-box;"></textarea>
+        
+        <button class="btn btn-green" onclick="copiarTextoIA()">📋 Copiar Texto</button>
+      </div>
+    </div>
+  </div>
+
 </body>
 </html>
