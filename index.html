@@ -8,20 +8,24 @@
 </head>
 <body>
 
+  <!-- TOPBAR: BOTÕES DE AÇÃO -->
   <div class="topbar no-print">
     <div class="topbar-left">
       <button id="btn-dark-mode" class="btn btn-gray" onclick="alternarModoEscuro()">🌙 Modo Escuro</button>
       <button class="btn btn-gray" onclick="limparOrcamento()">🗑️ Limpar Tela</button>
-      <button class="btn btn-gray" onclick="abrirModalHistorico()">📜 Histórico de Orçamentos</button>
+      <button class="btn btn-gray" onclick="abrirModalHistorico()">📜 Histórico & Dashboard</button>
     </div>
     <div class="topbar-right">
-      <button class="btn btn-blue" onclick="salvarEImprimir()">🖨️ Salvar e Imprimir PDF</button>
+      <button id="btn-layout-print" class="btn btn-gray" onclick="alternarLayoutImpressao()">📄 Layout: A4</button>
+      <button class="btn btn-blue" onclick="salvarEImprimir()">🖨️ Salvar e Imprimir</button>
       <button class="btn btn-green" onclick="enviarWhatsApp()">💬 Enviar para WhatsApp</button>
     </div>
   </div>
 
-  <div class="card">
+  <!-- CARD PRINCIPAL DO ORÇAMENTO -->
+  <div id="orcamento-card" class="card layout-a4">
     
+    <!-- CABEÇALHO -->
     <div class="header">
       <div class="header-left">
         <label for="upload-logo" style="cursor: pointer;" title="Clique para mudar o Logo">
@@ -39,6 +43,7 @@
       </div>
     </div>
 
+    <!-- DATA -->
     <div style="margin-top: 20px; font-size: 14px;" class="date-row">
       <strong>Uberlândia-MG,</strong> <input type="text" id="data-orcamento" style="border:none; font-size:14px; width:200px; font-family:inherit;" readonly>
     </div>
@@ -66,6 +71,7 @@
 
     <p class="intro" style="font-size: 14px; margin: 25px 0 15px 0;">Conforme solicitação estamos enviando nossos melhores preços:</p>
 
+    <!-- TABELA DE PRODUTOS -->
     <table>
       <thead>
         <tr>
@@ -78,7 +84,8 @@
         </tr>
       </thead>
       <tbody id="tabela-produtos">
-        </tbody>
+        <!-- Controlado via JS -->
+      </tbody>
       <tfoot>
         <tr>
           <td colspan="4" class="gray">Subtotal</td>
@@ -100,18 +107,10 @@
           <td class="val">
             <select id="cond-pag" onchange="calcular()">
               <option value="vista">À vista (Dinheiro / Pix)</option>
-              <option value="1x_juros">1x no cartão (acréscimo)</option>
-              <option value="2x_juros">2x no cartão (acréscimo)</option>
-              <option value="3x_juros">3x no cartão (acréscimo)</option>
-              <option value="4x_juros">4x no cartão (acréscimo)</option>
-              <option value="5x_juros">5x no cartão (acréscimo)</option>
-              <option value="6x_juros">6x no cartão (acréscimo)</option>
-              <option value="7x_juros">7x no cartão (acréscimo)</option>
-              <option value="8x_juros">8x no cartão (acréscimo)</option>
-              <option value="9x_juros">9x no cartão (acréscimo)</option> 
-              <option value="10x_juros">10x no cartão (acréscimo)</option>
-              <option value="11x_juros">11x no cartão (acréscimo)</option>
-              <option value="12x_juros">12x no cartão (acréscimo)</option>
+              <option value="2x_sem">2x sem juros no cartão</option>
+              <option value="3x_sem">3x sem juros no cartão</option>
+              <option value="6x_juros">6x no cartão (5% acréscimo)</option>
+              <option value="10x_juros">10x no cartão (8% acréscimo)</option>
               <option value="boleto">Boleto bancário</option>
               <option value="outro">Outro</option>
             </select>
@@ -144,6 +143,7 @@
       <input type="number" id="valor-desconto" value="0" min="0" oninput="calcular()">
     </div>
 
+    <!-- OBSERVAÇÕES GERAIS -->
     <div class="obs-box">
       <label class="obs-label">Observações / Condições Gerais</label>
       <textarea id="obs-gerais" rows="10">
@@ -157,6 +157,7 @@
 • Em Casos de compra de produtos específicos com os nossos fornecedores para cumprir a demanda do cliente, de produtos cotados que não temos em nossos estoques, não aceitamos troca e nem devolução do mesmo. Favor avaliar e validar antes este orçamento com o seu departamento de TI ou áreas afins.</textarea>
     </div>
 
+    <!-- ASSINATURA -->
     <div class="signature-container">
       <div class="signature-line"></div>
       <div class="signature-title">Responsável Comercial - Online Shopping</div>
@@ -164,14 +165,48 @@
 
   </div>
 
+  <!-- CONTAINER DE SUGESTÕES (AUTOCOMPLETAR) -->
   <div id="autocomplete-list" class="autocomplete-suggestions no-print"></div>
 
+  <!-- MODAL DO HISTÓRICO & DASHBOARD -->
   <div id="modal-historico" class="modal no-print">
-    <div class="modal-content">
+    <div class="modal-content" style="width: 80%; max-width: 1100px;">
       <div class="modal-header">
-        <h3>Histórico de Orçamentos Salvos</h3>
+        <h3>Painel de Gestão e Histórico</h3>
         <span class="close-modal" onclick="fecharModalHistorico()">&times;</span>
       </div>
+      
+      <!-- DASHBOARD METRICAS -->
+      <div class="dashboard-grid">
+        <div class="dash-card">
+          <span class="title">💸 Faturamento Total</span>
+          <span id="dash-faturamento" class="value">R$ 0,00</span>
+        </div>
+        <div class="dash-card">
+          <span class="title">📋 Total Orçamentos</span>
+          <span id="dash-qtd" class="value">0</span>
+        </div>
+        <div class="dash-card">
+          <span class="title">📊 Ticket Médio</span>
+          <span id="dash-ticket" class="value">R$ 0,00</span>
+        </div>
+        <div class="dash-card">
+          <span class="title">🎯 Conversão (Aprovados)</span>
+          <span id="dash-conversao" class="value">0%</span>
+        </div>
+      </div>
+
+      <!-- CONTROLES DO HISTÓRICO -->
+      <div class="historico-controls">
+        <input type="text" id="busca-historico" placeholder="🔍 Buscar por Cliente ou Código..." oninput="renderizarAbasHistorico()">
+        <div class="backup-actions">
+          <button class="btn btn-gray" onclick="exportarBackupJSON()">📥 Exportar Backup</button>
+          <label class="btn btn-gray" style="display:inline-block; margin:0; cursor:pointer;">
+            📤 Importar Backup <input type="file" id="import-json" accept=".json" style="display:none;" onchange="importarBackupJSON(this)">
+          </label>
+        </div>
+      </div>
+
       <div class="modal-body">
         <table class="table-historico">
           <thead>
@@ -180,11 +215,13 @@
               <th>Cliente</th>
               <th>Data</th>
               <th>Total</th>
+              <th>Status</th>
               <th>Ações</th>
             </tr>
           </thead>
           <tbody id="lista-historico-corpo">
-            </tbody>
+            <!-- Injetado via JS -->
+          </tbody>
         </table>
       </div>
     </div>

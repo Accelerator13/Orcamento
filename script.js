@@ -1,6 +1,3 @@
-// ==========================================================================
-// 1. BANCO DE DADOS DE PRODUTOS (CATÁLOGO RÁPIDO)
-// ==========================================================================
 const CATALOGO_PRODUTOS = [
   { nome: "SSD Kingston NV2 1TB NVMe M.2", preco: "389.90" },
   { nome: "SSD Kingston NV2 500GB NVMe M.2", preco: "249.00" },
@@ -16,34 +13,25 @@ const CATALOGO_PRODUTOS = [
 
 const OPCOES_PAGAMENTO = {
   "vista":    { acrescimo: 0.00, texto: "Pagamento único sem acréscimo", parcelas: 1 },
-  "1x_juros":   { acrescimo: 0.00, texto: "c/ acréscimo", parcelas: 1 },
-  "2x_juros":   { acrescimo: 0.00, texto: "c/ acréscimo", parcelas: 2 },
-  "3x_juros":   { acrescimo: 0.00, texto: "c/ acréscimo", parcelas: 3 },
-  "4x_juros":   { acrescimo: 0.00, texto: "c/ acréscimo", parcelas: 4 },
-  "5x_juros":   { acrescimo: 0.00, texto: "c/ acréscimo", parcelas: 5 },
-  "6x_juros": { acrescimo: 0.00, texto: "c/ acréscimo", parcelas: 6 },
-  "7x_juros": { acrescimo: 0.00, texto: "c/ acréscimo", parcelas: 7 },
-  "8x_juros": { acrescimo: 0.00, texto: "c/ acréscimo", parcelas: 8 },
-  "9x_juros": { acrescimo: 0.00, texto: "c/ acréscimo", parcelas: 9 },
-  "10x_juros":{ acrescimo: 0.00, texto: "c/ acréscimo", parcelas: 10 },
+  "2x_sem":   { acrescimo: 0.00, texto: "sem juros", parcelas: 2 },
+  "3x_sem":   { acrescimo: 0.00, texto: "sem juros", parcelas: 3 },
+  "6x_juros": { acrescimo: 0.05, texto: "c/ acréscimo", parcelas: 6 },
+  "10x_juros":{ acrescimo: 0.08, texto: "c/ acréscimo", parcelas: 10 },
   "boleto":   { acrescimo: 0.00, texto: "Pagamento único sem acréscimo", parcelas: 1 },
   "outro":    { acrescimo: 0.00, texto: "", parcelas: 1 }
 };
 
 let divAtivaAutocompletar = null;
 
-// ==========================================================================
-// 2. FUNÇÃO PRINCIPAL DE CÁLCULO E REGRAS DE NEGÓCIO
-// ==========================================================================
 function calcular() {
   const linhas = document.querySelectorAll("#tabela-produtos tr");
   let subtotalGeral = 0;
 
   linhas.forEach(linha => {
-    const inputQtd = linha.querySelector("input[type='number']");
+    const inputQtd = linha.querySelector(".qtd-input");
     const inputValor = linha.querySelector(".valor-unitario"); 
     const inputObs = linha.querySelector(".prod-obs");
-    const celulaSubtotal = linha.cells.length > 4 ? linha.cells[4] : null;
+    const celulaSubtotal = linha.querySelector(".subtotal-cell");
 
     if (inputObs) {
       const textoObs = inputObs.value.toLowerCase();
@@ -72,7 +60,6 @@ function calcular() {
     style: 'currency', currency: 'BRL'
   });
 
-  // TRAVA DE SEGURANÇA DE DESCONTO (MÁX 20%)
   const tipoDesconto = document.getElementById("tipo-desconto").value;
   const inputValorDesconto = document.getElementById("valor-desconto");
   let valorDescontoDigitado = parseFloat(inputValorDesconto.value) || 0;
@@ -132,9 +119,6 @@ function calcular() {
   salvarEstadoAtualNoLocalStorage();
 }
 
-// ==========================================================================
-// 3. MÁSCARA DINÂMICA DE DINHEIRO (REAL TIME)
-// ==========================================================================
 function aplicarMascaraDinheiro(input) {
   let valor = input.value.replace(/\D/g, '');
   if(valor === "") valor = "0";
@@ -142,9 +126,6 @@ function aplicarMascaraDinheiro(input) {
   input.value = valorFloat.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
-// ==========================================================================
-// 4. SISTEMA DE AUTOCOMPLETAR (SUGESTÕES)
-// ==========================================================================
 function gerenciarAutocompletar(divEditavel) {
   divAtivaAutocompletar = divEditavel;
   const texto = divEditavel.textContent.trim().toLowerCase();
@@ -170,10 +151,8 @@ function gerenciarAutocompletar(divEditavel) {
     
     item.addEventListener("click", () => {
       divEditavel.textContent = produto.nome;
-      
       const linha = divEditavel.closest("tr");
       const inputPreco = linha.querySelector(".valor-unitario");
-      
       let valorLimpo = produto.preco.replace('.', '');
       let valorFloat = parseFloat(valorLimpo);
       inputPreco.value = valorFloat.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2});
@@ -197,9 +176,6 @@ document.addEventListener("click", (e) => {
   }
 });
 
-// ==========================================================================
-// 5. GERENCIAMENTO DE LINHAS DINÂMICAS
-// ==========================================================================
 function adicionarNovaLinha(nome = "", qtd = 1, valor = "0,00", obs = "") {
   const tbody = document.getElementById("tabela-produtos");
   const novaLinha = document.createElement("tr");
@@ -265,177 +241,8 @@ function moverParaBaixo(botao) {
   }
 }
 
-// ==========================================================================
-// 6. HISTÓRICO DE ORÇAMENTOS & LOCAL STORAGE
-// ==========================================================================
-function salvarEstadoAtualNoLocalStorage() {
-  const itens = [];
-  document.querySelectorAll("#tabela-produtos tr").forEach(linha => {
-    const nome = linha.querySelector(".prod-nome").textContent;
-    const qtd = linha.querySelector(".qtd-input").value;
-    const valor = linha.querySelector(".valor-unitario").value;
-    const obs = linha.querySelector(".prod-obs").value;
-    if(nome || valor !== "0,00") {
-      itens.push({ nome, qtd, valor, obs });
-    }
-  });
-
-  const rascunho = {
-    numero: document.getElementById("num-orcamento").textContent,
-    cnpj: document.getElementById("cliente-cnpj").value,
-    nome: document.getElementById("cliente-nome").value,
-    whats: document.getElementById("cliente-whats").value,
-    vendedor: document.getElementById("responsavel-nome").value,
-    tipoDesconto: document.getElementById("tipo-desconto").value,
-    valorDesconto: document.getElementById("valor-desconto").value,
-    condPag: document.getElementById("cond-pag").value,
-    prevEntrega: document.getElementById("prev-entrega").value,
-    obsGerais: document.getElementById("obs-gerais").value,
-    itens: itens
-  };
-  localStorage.setItem("orc_rascunho_atual", JSON.stringify(rascunho));
-}
-
-function carregarRascunho() {
-  const dados = localStorage.getItem("orc_rascunho_atual");
-  if (!dados) {
-    adicionarNovaLinha();
-    return;
-  }
-  const rascunho = JSON.parse(dados);
-  
-  document.getElementById("num-orcamento").textContent = rascunho.numero || "ORC-001";
-  document.getElementById("cliente-cnpj").value = rascunho.cnpj || "";
-  document.getElementById("cliente-nome").value = rascunho.nome || "";
-  document.getElementById("cliente-whats").value = rascunho.whats || "";
-  document.getElementById("responsavel-nome").value = rascunho.vendedor || "";
-  document.getElementById("tipo-desconto").value = rascunho.tipoDesconto || "nenhum";
-  document.getElementById("valor-desconto").value = rascunho.valorDesconto || "0";
-  document.getElementById("cond-pag").value = rascunho.condPag || "vista";
-  document.getElementById("prev-entrega").value = rascunho.prevEntrega || "Imediato";
-  document.getElementById("obs-gerais").value = rascunho.obsGerais || "";
-
-  const tbody = document.getElementById("tabela-produtos");
-  tbody.innerHTML = "";
-
-  if(rascunho.itens && rascunho.itens.length > 0) {
-    rascunho.itens.forEach(i => {
-      adicionarNovaLinha(i.nome, i.qtd, i.valor, i.obs);
-    });
-  } else {
-    adicionarNovaLinha();
-  }
-}
-
-function salvarEImprimir() {
-  let historico = JSON.parse(localStorage.getItem("orc_historico")) || [];
-  const numAtual = document.getElementById("num-orcamento").textContent;
-  const cliente = document.getElementById("cliente-nome").value || "Cliente sem Nome";
-  const total = document.getElementById("total-display").textContent;
-  const dataHoje = document.getElementById("data-orcamento").value;
-
-  // Verifica se já está no histórico para atualizar ou inserir novo
-  const indexExistente = historico.findIndex(o => o.numero === numAtual);
-  const dadosOrcamento = {
-    numero: numAtual,
-    cliente: cliente,
-    data: dataHoje,
-    total: total,
-    raw: localStorage.getItem("orc_rascunho_atual")
-  };
-
-  if(indexExistente >= 0) {
-    historico[indexExistente] = dadosOrcamento;
-  } else {
-    historico.push(dadosOrcamento);
-  }
-
-  localStorage.setItem("orc_historico", JSON.stringify(historico));
-
-  // Incrementa numeração automática para o próximo orçamento
-  if(indexExistente === -1) {
-    let proximoNum = parseInt(numAtual.replace("ORC-", "")) + 1;
-    let stringNum = "ORC-" + String(proximoNum).padStart(3, '0');
-    localStorage.setItem("proximo_numero_orc", stringNum);
-  }
-
-  window.print();
-}
-
-// CONTRÔLES DA MODAL DE HISTÓRICO
-function abrirModalHistorico() {
-  document.getElementById("modal-historico").style.display = "block";
-  const historico = JSON.parse(localStorage.getItem("orc_historico")) || [];
-  const corpo = document.getElementById("lista-historico-corpo");
-  corpo.innerHTML = "";
-
-  if(historico.length === 0) {
-    corpo.innerHTML = `<tr><td colspan="5" class="center">Nenhum orçamento arquivado ainda.</td></tr>`;
-    return;
-  }
-
-  historico.forEach((orc, index) => {
-    const tr = document.createElement("tr");
-    tr.innerHTML = `
-      <td><strong>${orc.numero}</strong></td>
-      <td>${orc.cliente}</td>
-      <td>${orc.data}</td>
-      <td style="color:#2b6cb0; font-weight:bold;">${orc.total}</td>
-      <td>
-        <button class="btn btn-blue" style="padding:4px 8px; font-size:11px;" onclick="restaurarOrcamentoDoHistorico(${index})">📂 Abrir</button>
-        <button class="btn btn-remove" style="padding:4px 8px; font-size:11px;" onclick="deletarDoHistorico(${index})">✕</button>
-      </td>
-    `;
-    corpo.appendChild(tr);
-  });
-}
-
-function fecharModalHistorico() {
-  document.getElementById("modal-historico").style.display = "none";
-}
-
-function restaurarOrcamentoDoHistorico(index) {
-  const historico = JSON.parse(localStorage.getItem("orc_historico"));
-  const escolhido = historico[index];
-  localStorage.setItem("orc_rascunho_atual", escolhido.raw);
-  carregarRascunho();
-  fecharModalHistorico();
-}
-
-function deletarDoHistorico(index) {
-  if(confirm("Deseja eliminar este registro do histórico?")) {
-    let historico = JSON.parse(localStorage.getItem("orc_historico"));
-    historico.splice(index, 1);
-    localStorage.setItem("orc_historico", JSON.stringify(historico));
-    abrirModalHistorico();
-  }
-}
-
-// ==========================================================================
-// 7. UPLOAD DE LOGO DINÂMICO (SALVA EM BASE64)
-// ==========================================================================
-function alterarLogo(input) {
-  if (input.files && input.files[0]) {
-    const leitor = new FileReader();
-    leitor.onload = function(e) {
-      document.getElementById("logo-img").src = e.target.result;
-      localStorage.setItem("orc_logo_custom", e.target.result);
-    };
-    leitor.readAsDataURL(input.files[0]);
-  }
-}
-
-function carregarLogoSalvo() {
-  const logoSalvo = localStorage.getItem("orc_logo_custom");
-  if(logoSalvo) {
-    document.getElementById("logo-img").src = logoSalvo;
-  }
-}
-
-// 1. BUSCA CNPJ CORRIGIDA (Remove formatação ao digitar ou colar)
 function buscarCNPJ() {
   const campoCnpj = document.getElementById("cliente-cnpj");
-  // Remove tudo o que não for número antes de validar o tamanho
   const cnpj = campoCnpj.value.replace(/\D/g, '');
   const campoNome = document.getElementById("cliente-nome");
   const spinner = document.getElementById("cnpj-spinner");
@@ -462,7 +269,9 @@ function buscarCNPJ() {
   }
 }
 
-// 2. SALVAR ESTADO (Atualizado para o novo ID do WhatsApp)
+// ==========================================================================
+// EXPANSÃO: GESTÃO COMPLETA DE HISTÓRICO, BACKUP E DASHBOARD
+// ==========================================================================
 function salvarEstadoAtualNoLocalStorage() {
   const itens = [];
   document.querySelectorAll("#tabela-produtos tr").forEach(linha => {
@@ -491,7 +300,6 @@ function salvarEstadoAtualNoLocalStorage() {
   localStorage.setItem("orc_rascunho_atual", JSON.stringify(rascunho));
 }
 
-// 3. CARREGAR RASCUNHO (Atualizado para o novo ID do WhatsApp)
 function carregarRascunho() {
   const dados = localStorage.getItem("orc_rascunho_atual");
   if (!dados) {
@@ -523,7 +331,194 @@ function carregarRascunho() {
   }
 }
 
-// 4. WHATSAPP (Agora focado no link de partilha do vendedor)
+function salvarEImprimir() {
+  let historico = JSON.parse(localStorage.getItem("orc_historico")) || [];
+  const numAtual = document.getElementById("num-orcamento").textContent;
+  const cliente = document.getElementById("cliente-nome").value || "Cliente sem Nome";
+  const total = document.getElementById("total-display").textContent;
+  const dataHoje = document.getElementById("data-orcamento").value;
+
+  const indexExistente = historico.findIndex(o => o.numero === numAtual);
+  
+  const dadosOrcamento = {
+    numero: numAtual,
+    cliente: cliente,
+    data: dataHoje,
+    total: total,
+    status: indexExistente >= 0 ? historico[indexExistente].status : "🟡 Pendente",
+    raw: localStorage.getItem("orc_rascunho_atual")
+  };
+
+  if(indexExistente >= 0) {
+    historico[indexExistente] = dadosOrcamento;
+  } else {
+    historico.push(dadosOrcamento);
+  }
+
+  localStorage.setItem("orc_historico", JSON.stringify(historico));
+
+  if(indexExistente === -1) {
+    let proximoNum = parseInt(numAtual.replace("ORC-", "")) + 1;
+    let stringNum = "ORC-" + String(proximoNum).padStart(3, '0');
+    localStorage.setItem("proximo_numero_orc", stringNum);
+  }
+
+  window.print();
+}
+
+function atualizarDashboard() {
+  const historico = JSON.parse(localStorage.getItem("orc_historico")) || [];
+  let faturamentoTotal = 0;
+  let totalAprovados = 0;
+
+  historico.forEach(o => {
+    let valorFloat = parseFloat(o.total.replace(/[^\d,]/g, '').replace(',', '.'));
+    if (o.status === "🟢 Aprovado") {
+      faturamentoTotal += valorFloat;
+      totalAprovados++;
+    }
+  });
+
+  const totalOrcs = historico.length;
+  const ticketMedio = totalAprovados > 0 ? (faturamentoTotal / totalAprovados) : 0;
+  const taxaConversao = totalOrcs > 0 ? ((totalAprovados / totalOrcs) * 100) : 0;
+
+  document.getElementById("dash-faturamento").textContent = faturamentoTotal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+  document.getElementById("dash-qtd").textContent = totalOrcs;
+  document.getElementById("dash-ticket").textContent = ticketMedio.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+  document.getElementById("dash-conversao").textContent = `${taxaConversao.toFixed(0)}%`;
+}
+
+function abrirModalHistorico() {
+  document.getElementById("modal-historico").style.display = "block";
+  atualizarDashboard();
+  renderizarAbasHistorico();
+}
+
+function fecharModalHistorico() {
+  document.getElementById("modal-historico").style.display = "none";
+}
+
+function renderizarAbasHistorico() {
+  const historico = JSON.parse(localStorage.getItem("orc_historico")) || [];
+  const termoBusca = document.getElementById("busca-historico").value.toLowerCase();
+  const corpo = document.getElementById("lista-historico-corpo");
+  corpo.innerHTML = "";
+
+  const filtrados = historico.filter(o => 
+    o.numero.toLowerCase().includes(termoBusca) || 
+    o.cliente.toLowerCase().includes(termoBusca)
+  );
+
+  if(filtrados.length === 0) {
+    corpo.innerHTML = `<tr><td colspan="6" class="center">Nenhum registo encontrado.</td></tr>`;
+    return;
+  }
+
+  filtrados.forEach((orc) => {
+    // Acha o index real no array original baseado no código único do orçamento
+    const indexReal = historico.findIndex(h => h.numero === orc.numero);
+    const tr = document.createElement("tr");
+    
+    tr.innerHTML = `
+      <td><strong>${orc.numero}</strong></td>
+      <td>${orc.cliente}</td>
+      <td>${orc.data}</td>
+      <td style="color:#2b6cb0; font-weight:bold;">${orc.total}</td>
+      <td>
+        <select onchange="mudarStatusOrcamento(${indexReal}, this.value)" class="status-select">
+          <option value="🟡 Pendente" ${orc.status === '🟡 Pendente' ? 'selected' : ''}>🟡 Pendente</option>
+          <option value="🟢 Aprovado" ${orc.status === '🟢 Aprovado' ? 'selected' : ''}>🟢 Aprovado</option>
+          <option value="🔴 Cancelado" ${orc.status === '🔴 Cancelado' ? 'selected' : ''}>🔴 Cancelado</option>
+        </select>
+      </td>
+      <td>
+        <button class="btn btn-blue" style="padding:4px 8px; font-size:11px;" onclick="restaurarOrcamentoDoHistorico(${indexReal})">📂 Abrir</button>
+        <button class="btn btn-remove" style="padding:4px 8px; font-size:11px;" onclick="deletarDoHistorico(${indexReal})">✕</button>
+      </td>
+    `;
+    corpo.appendChild(tr);
+  });
+}
+
+function mudarStatusOrcamento(index, novoStatus) {
+  let historico = JSON.parse(localStorage.getItem("orc_historico"));
+  historico[index].status = novoStatus;
+  localStorage.setItem("orc_historico", JSON.stringify(historico));
+  atualizarDashboard();
+}
+
+function restaurarOrcamentoDoHistorico(index) {
+  const historico = JSON.parse(localStorage.getItem("orc_historico"));
+  localStorage.setItem("orc_rascunho_atual", historico[index].raw);
+  carregarRascunho();
+  fecharModalHistorico();
+}
+
+function deletarDoHistorico(index) {
+  if(confirm("Deseja eliminar este registro definitivo do histórico?")) {
+    let historico = JSON.parse(localStorage.getItem("orc_historico"));
+    historico.splice(index, 1);
+    localStorage.setItem("orc_historico", JSON.stringify(historico));
+    atualizarDashboard();
+    renderizarAbasHistorico();
+  }
+}
+
+// BACKUPS JSON
+function exportarBackupJSON() {
+  const dados = {
+    historico: JSON.parse(localStorage.getItem("orc_historico")) || [],
+    proximo: localStorage.getItem("proximo_numero_orc") || "ORC-001",
+    logo: localStorage.getItem("orc_logo_custom") || ""
+  };
+  const blob = new Blob([JSON.stringify(dados, null, 2)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `backup_orcamentos_${new Date().toISOString().slice(0,10)}.json`;
+  a.click();
+}
+
+function importarBackupJSON(input) {
+  if (input.files && input.files[0]) {
+    const leitor = new FileReader();
+    leitor.onload = function(e) {
+      try {
+        const dados = JSON.parse(e.target.result);
+        if(dados.historico) {
+          localStorage.setItem("orc_historico", JSON.stringify(dados.historico));
+          if(dados.proximo) localStorage.setItem("proximo_numero_orc", dados.proximo);
+          if(dados.logo) localStorage.setItem("orc_logo_custom", dados.logo);
+          alert("Backup importado com sucesso!");
+          atualizarDashboard();
+          renderizarAbasHistorico();
+          carregarLogoSalvo();
+          carregarRascunho();
+        }
+      } catch(err) {
+        alert("Erro ao ler arquivo de backup inválido.");
+      }
+    };
+    leitor.readAsText(input.files[0]);
+  }
+}
+
+// ALTERNA LAYOUT ENTRE A4 E CUPOM 80MM
+function alternarLayoutImpressao() {
+  const card = document.getElementById("orcamento-card");
+  const btn = document.getElementById("btn-layout-print");
+  if(card.classList.contains("layout-a4")) {
+    card.classList.remove("layout-a4");
+    card.classList.add("layout-cupom");
+    btn.innerHTML = "🖨️ Layout: Cupom 80mm";
+  } else {
+    card.classList.remove("layout-cupom");
+    card.classList.add("layout-a4");
+    btn.innerHTML = "📄 Layout: A4";
+  }
+}
+
 function enviarWhatsApp() {
   const numOrcamento = document.getElementById("num-orcamento").textContent;
   const nomeCliente = document.getElementById("cliente-nome").value || "Cliente";
@@ -551,41 +546,24 @@ function enviarWhatsApp() {
     `💰 *VALOR TOTAL FINAL:* ${totalGeral}\n\n` +
     `Qualquer dúvida estou à disposição!`;
 
-  // Se o vendedor colocou o próprio número, abre o chat dele mesmo para ele reencaminhar.
-  // Se não colocou, gera o link global de partilha do texto.
   const linkBase = whatsVendedor ? `https://api.whatsapp.com/send?phone=55${whatsVendedor}&text=` : `https://api.whatsapp.com/send?text=`;
   window.open(linkBase + encodeURIComponent(textoMensagem), '_blank');
 }
 
-function enviarWhatsApp() {
-  const numOrcamento = document.getElementById("num-orcamento").textContent;
-  const nomeCliente = document.getElementById("cliente-nome").value || "Cliente";
-  const whatsCliente = document.getElementById("cliente-whats").value.replace(/\D/g, '');
-  const totalGeral = document.getElementById("total-display").textContent;
-  
-  const selectPag = document.getElementById("cond-pag");
-  const condPagamentoTexto = selectPag.options[selectPag.selectedIndex].text;
-  const detalheParcela = document.getElementById("parcelas-detalhe").textContent;
+function alterarLogo(input) {
+  if (input.files && input.files[0]) {
+    const leitor = new FileReader();
+    leitor.onload = function(e) {
+      document.getElementById("logo-img").src = e.target.result;
+      localStorage.setItem("orc_logo_custom", e.target.result);
+    };
+    leitor.readAsDataURL(input.files[0]);
+  }
+}
 
-  let itensTexto = "";
-  document.querySelectorAll("#tabela-produtos tr").forEach((linha) => {
-    const divNome = linha.querySelector(".prod-nome");
-    const inputQtd = linha.querySelector(".qtd-input");
-    if (divNome && divNome.textContent) {
-      itensTexto += `*${inputQtd.value}x* ${divNome.textContent}\n`;
-    }
-  });
-
-  const textoMensagem = 
-    `Olá, *${nomeCliente}*! Segue o resumo do seu orçamento:\n\n` +
-    `📄 *Código:* ${numOrcamento}\n` +
-    `🛍️ *Itens:*\n${itensTexto}\n` +
-    `💳 *Forma de Pagamento:* ${condPagamentoTexto} (${detalheParcela})\n` +
-    `💰 *VALOR TOTAL FINAL:* ${totalGeral}\n\n` +
-    `O documento PDF detalhado já está disponível. Como prefere receber?`;
-
-  const linkBase = whatsCliente ? `https://api.whatsapp.com/send?phone=55${whatsCliente}&text=` : `https://api.whatsapp.com/send?text=`;
-  window.open(linkBase + encodeURIComponent(textoMensagem), '_blank');
+function carregarLogoSalvo() {
+  const logoSalvo = localStorage.getItem("orc_logo_custom");
+  if(logoSalvo) document.getElementById("logo-img").src = logoSalvo;
 }
 
 function carregarDataAtual() {
@@ -606,7 +584,7 @@ function limparOrcamento() {
     
     document.getElementById("cliente-cnpj").value = "";
     document.getElementById("cliente-nome").value = "";
-    document.getElementById("cliente-whats").value = "";
+    document.getElementById("vendedor-whats").value = "";
     document.getElementById("responsavel-nome").value = "";
     document.getElementById("valor-desconto").value = "0";
     document.getElementById("tipo-desconto").value = "nenhum";
@@ -621,7 +599,6 @@ function limparOrcamento() {
   }
 }
 
-// INICIALIZAÇÃO DO SISTEMA
 window.onload = function() {
   carregarDataAtual();
   carregarLogoSalvo();
