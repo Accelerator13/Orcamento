@@ -186,3 +186,46 @@ body.dark-theme .autocomplete-item:hover { background-color: #1a202c; color: #63
   table div.prod-nome { border: none !important; background: transparent !important; padding: 0 !important; display: block !important; }
   th { background-color: #f1f5f9 !important; color: #000000 !important; border-bottom: 2px solid #cbd5e0 !important; }
 }
+
+/* --- RESPONSIVIDADE COMPLETA (ZONA MOBILE) --- */
+@media (max-width: 768px) {
+    /* 1. Força a barra superior a quebrar em linhas (Layout de Blocos) */
+    .topbar {
+        display: flex !important;
+        flex-wrap: wrap !important; /* Permite os botões pularem para a linha de baixo */
+        gap: 6px !important;
+        justify-content: center !important;
+        max-width: 100% !important;
+        margin-bottom: 15px !important;
+    }
+
+    /* 2. Ajusta cada botão para não sumir o texto */
+    .btn {
+        flex: 1 1 calc(33% - 10px) !important; /* Coloca 3 botões por linha */
+        min-width: 85px !important;
+        padding: 8px 4px !important;
+        font-size: 11px !important;
+        text-align: center !important;
+    }
+
+    /* 3. Ajusta o Card do Orçamento */
+    .card {
+        width: 100% !important;
+        max-width: 100% !important;
+        padding: 10px !important;
+        box-sizing: border-box !important;
+    }
+
+    /* 4. Faz as informações do cliente ficarem uma embaixo da outra */
+    .client-box {
+        grid-template-columns: 1fr !important; /* Muda de 3 colunas para 1 */
+        gap: 10px !important;
+    }
+
+    /* 5. Faz a tabela de itens permitir o toque e deslize para os lados */
+    .card style-tabela-container, table {
+        display: block !important;
+        width: 100% !important;
+        overflow-x: auto !important; /* Cria uma barra de rolagem só na tabela se faltar espaço */
+    }
+}
