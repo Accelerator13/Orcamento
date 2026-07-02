@@ -744,3 +744,5 @@ Não adicione nenhuma introdução como 'Aqui está o seu texto:', devolva apena
     campoResultado.value = "Erro de conexão com a API do Gemini. Verifique a sua internet.";
   }
 }
+
+
