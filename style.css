@@ -224,7 +224,7 @@ body.dark-theme .autocomplete-item:hover { background-color: #1a202c; color: #63
     }
 
     /* 5. Faz a tabela de itens permitir o toque e deslize para os lados */
-    .card style-tabela-container, table {
+    table {
         display: block !important;
         width: 100% !important;
         overflow-x: auto !important; /* Cria uma barra de rolagem só na tabela se faltar espaço */

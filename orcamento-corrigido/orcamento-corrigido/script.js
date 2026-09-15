@@ -23,6 +23,18 @@ const OPCOES_PAGAMENTO = {
 
 let divAtivaAutocompletar = null;
 
+// Evita injeção de HTML/script quando nomes de produtos, clientes ou itens
+// importados de um backup .json (ou digitados com caracteres como < > " )
+// são inseridos na página via innerHTML.
+function escapeHTML(valor) {
+  return String(valor ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
 function obterCatalogo() {
   let cat = localStorage.getItem("app_catalogo_prod");
   if(!cat) {
@@ -140,7 +152,7 @@ function gerenciarAutocompletar(divEditavel) {
   filtrados.forEach(produto => {
     const item = document.createElement("div");
     item.className = "autocomplete-item";
-    item.innerHTML = `<span>${produto.nome}</span> <strong>R$ ${parseFloat(produto.preco).toLocaleString('pt-BR', {minimumFractionDigits:2, maximumFractionDigits:2})}</strong>`;
+    item.innerHTML = `<span>${escapeHTML(produto.nome)}</span> <strong>R$ ${parseFloat(produto.preco).toLocaleString('pt-BR', {minimumFractionDigits:2, maximumFractionDigits:2})}</strong>`;
     
     item.addEventListener("click", () => {
       divEditavel.textContent = produto.nome;
@@ -172,7 +184,7 @@ document.getElementById("cliente-cnpj").addEventListener("input", function() {
   filtrados.forEach(c => {
     const item = document.createElement("div");
     item.className = "autocomplete-item";
-    item.innerHTML = `<span><strong>${c.cnpj}</strong> - ${c.nome}</span>`;
+    item.innerHTML = `<span><strong>${escapeHTML(c.cnpj)}</strong> - ${escapeHTML(c.nome)}</span>`;
     item.onclick = function() {
       document.getElementById("cliente-cnpj").value = c.cnpj;
       document.getElementById("cliente-nome").value = c.nome;
@@ -199,10 +211,10 @@ function adicionarNovaLinha(nome = "", qtd = 1, valor = "0,00", obs = "") {
   const novaLinha = document.createElement("tr");
   
   novaLinha.innerHTML = `
-    <td><div contenteditable="true" class="prod-nome" data-placeholder="Descrição do produto">${nome}</div></td>
-    <td class="center"><input type="number" class="center qtd-input" value="${qtd}" style="width: 50px;" /></td>
-    <td class="right"><input type="text" class="right valor-unitario" value="${valor}" style="width: 90px;" /></td>
-    <td><input type="text" class="prod-obs" placeholder="Ex: sob encomenda..." value="${obs}" /></td>
+    <td><div contenteditable="true" class="prod-nome" data-placeholder="Descrição do produto">${escapeHTML(nome)}</div></td>
+    <td class="center"><input type="number" class="center qtd-input" value="${escapeHTML(qtd)}" style="width: 50px;" /></td>
+    <td class="right"><input type="text" class="right valor-unitario" value="${escapeHTML(valor)}" style="width: 90px;" /></td>
+    <td><input type="text" class="prod-obs" placeholder="Ex: sob encomenda..." value="${escapeHTML(obs)}" /></td>
     <td class="right subtotal-cell" style="color: #2b6cb0; font-weight: 600;">R$ 0,00</td>
     <td class="center no-print">
       <div class="action-buttons">
@@ -276,7 +288,7 @@ function salvarEstadoAtualNoLocalStorage() {
     const qtd = linha.querySelector(".qtd-input").value;
     const valor = linha.querySelector(".valor-unitario").value;
     const obs = linha.querySelector(".prod-obs").value;
-    if(nome || valor !== "0,00") itens.push({ nome, qtd, valor, obs });
+    if(nome || obs || valor !== "0,00" || qtd !== "1") itens.push({ nome, qtd, valor, obs });
   });
 
   const linkPagamento = document.getElementById("link-pagamento-input") ? document.getElementById("link-pagamento-input").value : "";
@@ -430,10 +442,10 @@ function renderizarHistorico() {
     if (exibirBotaoFollowUp) tr.className = "linha-alerta-critica";
 
     tr.innerHTML = `
-      <td><strong>${orc.numero}</strong><br>${badgeTempoHtml}</td>
-      <td>${orc.cliente}</td>
-      <td>${orc.data}</td>
-      <td style="color:#2b6cb0; font-weight:bold;">${orc.total}</td>
+      <td><strong>${escapeHTML(orc.numero)}</strong><br>${badgeTempoHtml}</td>
+      <td>${escapeHTML(orc.cliente)}</td>
+      <td>${escapeHTML(orc.data)}</td>
+      <td style="color:#2b6cb0; font-weight:bold;">${escapeHTML(orc.total)}</td>
       <td>
         <select onchange="mudarStatusOrcamento(${idxOriginal}, this.value)" class="status-select">
           <option value="🟡 Pendente" ${orc.status === '🟡 Pendente'?'selected':''}>🟡 Pendente</option>
@@ -507,7 +519,7 @@ function renderizarCatalogo() {
   cat.forEach((p, idx) => {
     const tr = document.createElement("tr");
     tr.innerHTML = `
-      <td><input type="text" value="${p.nome}" style="width:100%; border:none; background:transparent;" onchange="editarProdutoNoCatalogo(${idx}, 'nome', this.value)"></td>
+      <td><input type="text" value="${escapeHTML(p.nome)}" style="width:100%; border:none; background:transparent;" onchange="editarProdutoNoCatalogo(${idx}, 'nome', this.value)"></td>
       <td class="right">R$ <input type="text" value="${parseFloat(p.preco).toLocaleString('pt-BR', {minimumFractionDigits:2, maximumFractionDigits:2})}" class="right" style="width:100px; border:none; background:transparent;" oninput="aplicarMascaraDinheiro(this)" onchange="editarProdutoNoCatalogo(${idx}, 'preco', this.value)"></td>
       <td class="center"><button class="btn btn-remove" onclick="removerProdutoDoCatalogo(${idx})">✕ Remover</button></td>
     `;
@@ -548,8 +560,8 @@ function renderizarCRM() {
   clientes.forEach((c, idx) => {
     const tr = document.createElement("tr");
     tr.innerHTML = `
-      <td><strong>${c.cnpj}</strong></td>
-      <td><input type="text" value="${c.nome}" style="width:100%; border:none; background:transparent;" onchange="editarClienteNoCRM(${idx}, this.value)"></td>
+      <td><strong>${escapeHTML(c.cnpj)}</strong></td>
+      <td><input type="text" value="${escapeHTML(c.nome)}" style="width:100%; border:none; background:transparent;" onchange="editarClienteNoCRM(${idx}, this.value)"></td>
       <td class="center"><button class="btn btn-remove" onclick="removerClienteDoCRM(${idx})">✕ Excluir</button></td>
     `;
     corpo.appendChild(tr);
@@ -631,7 +643,7 @@ function enviarWhatsApp() {
   document.querySelectorAll("#tabela-produtos tr").forEach(linha => {
     const divNome = linha.querySelector(".prod-nome");
     const inputQtd = linha.querySelector(".qtd-input");
-    if (divNome && divNome.textContent) itensTexto += `*${inputQtd.value}x* ${divNome.textContent}\n`;
+    if (divNome && divNome.textContent.trim()) itensTexto += `*${inputQtd.value}x* ${divNome.textContent.trim()}\n`;
   });
 
   const msg = `Olá, *${nomeCliente}*! Segue o resumo do seu orçamento:\n\n📄 *Código:* ${numOrcamento}\n🛍️ *Itens:*\n${itensTexto}\n💳 *Forma de Pagamento:* ${condPagamentoTexto} (${detalheParcela})\n💰 *VALOR TOTAL FINAL:* ${totalGeral}\n\nQualquer dúvida estou à disposição!`;
