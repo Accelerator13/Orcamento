@@ -676,6 +676,34 @@ function limparOrcamento() {
   }
 }
 
+// CORREÇÃO: campo <input> de texto nunca quebra linha, então um nome de
+// cliente/CNPJ/endereço comprido fica com o final cortado ao imprimir ou
+// gerar PDF — CSS sozinho não resolve isso. Antes de imprimir, alargamos
+// cada campo até caber o texto inteiro; depois de imprimir, devolvemos a
+// largura original para não bagunçar a tela de edição.
+const CAMPOS_QUE_PODEM_CORTAR = [
+  "cliente-cnpj", "cliente-nome", "vendedor-whats", "responsavel-nome",
+  "link-pagamento-input", "header-endereco", "header-telefone", "header-site",
+  "prev-entrega"
+];
+
+function ajustarLarguraParaImpressao(expandir) {
+  CAMPOS_QUE_PODEM_CORTAR.forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    if (expandir) {
+      el.dataset.larguraOriginal = el.style.width || "";
+      el.style.width = (el.scrollWidth + 6) + "px";
+    } else {
+      el.style.width = el.dataset.larguraOriginal || "";
+      delete el.dataset.larguraOriginal;
+    }
+  });
+}
+
+window.addEventListener("beforeprint", () => ajustarLarguraParaImpressao(true));
+window.addEventListener("afterprint", () => ajustarLarguraParaImpressao(false));
+
 window.onload = function() {
   document.getElementById("data-orcamento").value = new Date().toLocaleDateString('pt-BR', { day: 'numeric', month: 'long', year: 'numeric' });
   const customLogo = localStorage.getItem("orc_logo_custom"); if(customLogo) document.getElementById("logo-img").src = customLogo;
