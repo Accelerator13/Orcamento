@@ -96,6 +96,7 @@ body.dark-theme .linha-alerta-critica { background-color: #2c251e !important; bo
 
 .spinner { position: absolute; right: 10px; top: 28px; width: 16px; height: 16px; border: 2px solid #cbd5e0; border-top-color: #3182ce; border-radius: 50%; animation: spin 0.6s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
+.campo-buscando { background-color: #ebf8ff !important; border-color: #3182ce !important; }
 
 /* TABELA DE PRODUTOS */
 table { width: 100%; border-collapse: collapse; margin: 20px 0; font-size: 13px; }

@@ -140,7 +140,7 @@ function gerenciarAutocompletar(divEditavel) {
   filtrados.forEach(produto => {
     const item = document.createElement("div");
     item.className = "autocomplete-item";
-    item.innerHTML = `<span>${produto.nome}</span> <strong>R$ ${parseFloat(produto.preco).toLocaleString('pt-BR', {minimumFractionDigits:2})}</strong>`;
+    item.innerHTML = `<span>${produto.nome}</span> <strong>R$ ${parseFloat(produto.preco).toLocaleString('pt-BR', {minimumFractionDigits:2, maximumFractionDigits:2})}</strong>`;
     
     item.addEventListener("click", () => {
       divEditavel.textContent = produto.nome;
@@ -508,7 +508,7 @@ function renderizarCatalogo() {
     const tr = document.createElement("tr");
     tr.innerHTML = `
       <td><input type="text" value="${p.nome}" style="width:100%; border:none; background:transparent;" onchange="editarProdutoNoCatalogo(${idx}, 'nome', this.value)"></td>
-      <td class="right">R$ <input type="text" value="${parseFloat(p.preco).toLocaleString('pt-BR', {minimumFractionDigits:2})}" class="right" style="width:100px; border:none; background:transparent;" oninput="aplicarMascaraDinheiro(this)" onchange="editarProdutoNoCatalogo(${idx}, 'preco', this.value)"></td>
+      <td class="right">R$ <input type="text" value="${parseFloat(p.preco).toLocaleString('pt-BR', {minimumFractionDigits:2, maximumFractionDigits:2})}" class="right" style="width:100px; border:none; background:transparent;" oninput="aplicarMascaraDinheiro(this)" onchange="editarProdutoNoCatalogo(${idx}, 'preco', this.value)"></td>
       <td class="center"><button class="btn btn-remove" onclick="removerProdutoDoCatalogo(${idx})">✕ Remover</button></td>
     `;
     corpo.appendChild(tr);
@@ -684,6 +684,24 @@ function fecharGeradorIA() {
   document.getElementById("modal-ia").style.display = "none";
 }
 
+// Copia o texto gerado pela IA para a área de transferência
+function copiarTextoIA() {
+  const campoResultado = document.getElementById("ia-resultado");
+  const texto = campoResultado.value;
+  if (!texto) { alert("Não há texto para copiar ainda."); return; }
+
+  navigator.clipboard.writeText(texto).then(() => {
+    const btn = event.target;
+    const textoOriginal = btn.innerHTML;
+    btn.innerHTML = "✅ Copiado!";
+    setTimeout(() => { btn.innerHTML = textoOriginal; }, 1500);
+  }).catch(() => {
+    campoResultado.select();
+    document.execCommand("copy");
+    alert("Texto copiado!");
+  });
+}
+
 async function gerarTextoComIA() {
   const objetivo = document.getElementById("ia-objetivo").value;
   const tom = document.getElementById("ia-tom").value;
@@ -696,52 +714,29 @@ async function gerarTextoComIA() {
 
   campoResultado.value = "🤖 A IA está a processar a melhor estratégia... Por favor, aguarde.";
 
-  // ⚠️ Substitua pelo seu token real gerado no Google AI Studio
-  const GEMINI_API_KEY = "AQ.Ab8RN6LTe6pa-yV55QzjQLi5PY8Kwj_DLYBpfQE-n15ThyVJgw"; 
-  
-  // URL corrigida para compatibilidade total com chaves do AI Studio
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`;
-
-  const prompt = `Você é um especialista em copywriting para WhatsApp focado em vendas de hardware e tecnologia.
-Gere uma mensagem altamente persuasiva para o WhatsApp com base nisto:
-- Objetivo: ${objetivo}
-- Tom do texto: ${tom}
-
-Regras obrigatórias de formatação:
-1. Use quebras de linha para deixar o texto leve no celular.
-2. Use negritos do WhatsApp (*texto*) nas palavras mais importantes.
-3. Use emojis adequados (computadores, foguetes, checkmarks), sem exagerar.
-4. Termine com uma Chamada para Ação (CTA) clara.
-Não adicione nenhuma introdução como 'Aqui está o seu texto:', devolva apenas a mensagem pronta para enviar.`;
-
+  // A chave da API nunca deve ficar no navegador — quem abrir o "Ver código-fonte"
+  // ou o repositório no GitHub conseguiria copiá-la. A chamada agora vai para o
+  // nosso próprio servidor (server.js), que guarda a chave em segredo no .env.
   try {
-    const response = await fetch(url, {
+    const response = await fetch("/api/gerar-mensagem", {
       method: "POST",
-      headers: { 
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        contents: [{ parts: [{ text: prompt }] }]
-      })
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ objetivo, tom })
     });
 
     const data = await response.json();
-    
-    if (data.error) {
-      console.error("Erro detalhado da API do Gemini:", data.error);
-      campoResultado.value = `Erro da API: ${data.error.message}\n\nVerifique se o seu token foi colado corretamente e está ativo no painel do Google AI Studio.`;
+
+    if (!response.ok || data.erro) {
+      console.error("Erro detalhado da API do Gemini:", data.erro);
+      campoResultado.value = `Erro da API: ${data.erro || "falha desconhecida"}\n\nVerifique se o servidor está rodando e se a GEMINI_API_KEY está configurada no .env.`;
       return;
     }
 
-    if (data.candidates && data.candidates[0].content.parts[0].text) {
-      campoResultado.value = data.candidates[0].content.parts[0].text;
-    } else {
-      campoResultado.value = "Erro ao processar a resposta da IA. Pressione F12 para ver os detalhes no console do desenvolvedor.";
-    }
+    campoResultado.value = data.texto || "Erro ao processar a resposta da IA. Pressione F12 para ver os detalhes no console do desenvolvedor.";
 
   } catch (error) {
     console.error("Erro ao conectar com a API:", error);
-    campoResultado.value = "Erro de conexão com a API do Gemini. Verifique a sua internet.";
+    campoResultado.value = "Erro de conexão com o servidor. Verifique se o server.js está rodando.";
   }
 }
 
