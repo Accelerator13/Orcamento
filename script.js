@@ -80,7 +80,8 @@ function calcular() {
     }
 
     if (inputQtd && inputValor && celulaSubtotal) {
-      const qtd = parseFloat(inputQtd.value) || 0;
+      let qtd = parseFloat(inputQtd.value) || 0;
+      if (qtd < 0) { qtd = 0; inputQtd.value = 0; }
       const valorUnitario = parseFloat(inputValor.value.replace(/[^\d,]/g, '').replace(',', '.')) || 0;
       const subtotalItem = qtd * valorUnitario;
       subtotalGeral += subtotalItem;
@@ -212,15 +213,15 @@ function adicionarNovaLinha(nome = "", qtd = 1, valor = "0,00", obs = "") {
   
   novaLinha.innerHTML = `
     <td><div contenteditable="true" class="prod-nome" data-placeholder="Descrição do produto">${escapeHTML(nome)}</div></td>
-    <td class="center"><input type="number" class="center qtd-input" value="${escapeHTML(qtd)}" style="width: 50px;" /></td>
+    <td class="center"><input type="number" class="center qtd-input" value="${escapeHTML(qtd)}" min="1" step="1" style="width: 50px;" /></td>
     <td class="right"><input type="text" class="right valor-unitario" value="${escapeHTML(valor)}" style="width: 90px;" /></td>
     <td><input type="text" class="prod-obs" placeholder="Ex: sob encomenda..." value="${escapeHTML(obs)}" /></td>
     <td class="right subtotal-cell" style="color: #2b6cb0; font-weight: 600;">R$ 0,00</td>
     <td class="center no-print">
       <div class="action-buttons">
-        <button class="btn-order" onclick="moverLinha(this, -1)">▲</button>
-        <button class="btn-order" onclick="moverLinha(this, 1)">▼</button>
-        <button class="btn-remove">✕</button>
+        <button class="btn-order" onclick="moverLinha(this, -1)" title="Mover item para cima" aria-label="Mover item para cima">▲</button>
+        <button class="btn-order" onclick="moverLinha(this, 1)" title="Mover item para baixo" aria-label="Mover item para baixo">▼</button>
+        <button class="btn-remove" title="Remover item" aria-label="Remover item">✕</button>
       </div>
     </td>
   `;
@@ -249,9 +250,27 @@ function moverLinha(btn, direcao) {
   calcular();
 }
 
+// Formata o CNPJ digitado como 00.000.000/0000-00, sem travar o cursor.
+function formatarCNPJ(valor) {
+  const digitos = valor.replace(/\D/g, '').slice(0, 14);
+  return digitos
+    .replace(/^(\d{2})(\d)/, '$1.$2')
+    .replace(/^(\d{2})\.(\d{3})(\d)/, '$1.$2.$3')
+    .replace(/\.(\d{3})(\d)/, '.$1/$2')
+    .replace(/(\d{4})(\d)/, '$1-$2');
+}
+
 // CONEXÃO COM A BRASIL API PARA BUSCA DE CNPJ
 function buscarCNPJ() {
   const campoCnpj = document.getElementById("cliente-cnpj");
+  const posicaoCursor = campoCnpj.selectionStart;
+  const tamanhoAntes = campoCnpj.value.length;
+  campoCnpj.value = formatarCNPJ(campoCnpj.value);
+  const diferenca = campoCnpj.value.length - tamanhoAntes;
+  if (document.activeElement === campoCnpj) {
+    campoCnpj.setSelectionRange(posicaoCursor + diferenca, posicaoCursor + diferenca);
+  }
+
   const cnpj = campoCnpj.value.replace(/\D/g, '');
   const campoNome = document.getElementById("cliente-nome");
   const spinner = document.getElementById("cnpj-spinner");
@@ -260,9 +279,12 @@ function buscarCNPJ() {
     spinner.style.display = "block";
     campoCnpj.classList.add("campo-buscando");
     campoNome.value = "Buscando dados na nuvem corporativa...";
-    
-    fetch(`https://brasilapi.com.br/api/cnpj/v1/${cnpj}`)
-      .then(res => { if (!res.ok) throw new Error(); return res.json(); })
+
+    const controle = new AbortController();
+    const timeoutId = setTimeout(() => controle.abort(), 8000);
+
+    fetch(`https://brasilapi.com.br/api/cnpj/v1/${cnpj}`, { signal: controle.signal })
+      .then(res => { if (!res.ok) throw new Error("CNPJ não encontrado"); return res.json(); })
       .then(data => {
         const razao = data.razao_social || data.nome_fantasia || "";
         campoNome.value = razao;
@@ -274,6 +296,7 @@ function buscarCNPJ() {
         campoNome.value = "";
       })
       .finally(() => {
+        clearTimeout(timeoutId);
         spinner.style.display = "none";
         campoCnpj.classList.remove("campo-buscando");
       });
@@ -500,6 +523,7 @@ function mudarStatusOrcamento(idx, status) {
   localStorage.setItem("orc_historico", JSON.stringify(h)); atualizarDashboard();
 }
 function restaurarOrcamentoDoHistorico(idx) {
+  if (!confirm("Abrir este orçamento salvo vai substituir o que está na tela agora (não salvo). Continuar?")) return;
   localStorage.setItem("orc_rascunho_atual", JSON.parse(localStorage.getItem("orc_historico"))[idx].raw);
   carregarRascunho(); fecharModalGestao();
 }
@@ -725,21 +749,31 @@ function fecharGeradorIA() {
 }
 
 // Copia o texto gerado pela IA para a área de transferência
-function copiarTextoIA() {
+function copiarTextoIA(evt) {
   const campoResultado = document.getElementById("ia-resultado");
   const texto = campoResultado.value;
   if (!texto) { alert("Não há texto para copiar ainda."); return; }
 
-  navigator.clipboard.writeText(texto).then(() => {
-    const btn = event.target;
-    const textoOriginal = btn.innerHTML;
+  const btn = evt ? evt.currentTarget : null;
+  const textoOriginal = btn ? btn.innerHTML : null;
+
+  const marcarComoCopiado = () => {
+    if (!btn) return;
     btn.innerHTML = "✅ Copiado!";
     setTimeout(() => { btn.innerHTML = textoOriginal; }, 1500);
-  }).catch(() => {
+  };
+
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(texto).then(marcarComoCopiado).catch(() => {
+      campoResultado.select();
+      document.execCommand("copy");
+      marcarComoCopiado();
+    });
+  } else {
     campoResultado.select();
     document.execCommand("copy");
-    alert("Texto copiado!");
-  });
+    marcarComoCopiado();
+  }
 }
 
 async function gerarTextoComIA() {

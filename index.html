@@ -3,22 +3,25 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Sistema interno de geração de orçamentos da Online Shopping.">
+  <meta name="robots" content="noindex, nofollow">
   <title>Sistema de Orçamentos - Online Shopping</title>
+  <link rel="icon" href="logo.png" type="image/png">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
   <div class="topbar no-print">
     <div class="topbar-left">
-      <button id="btn-dark-mode" class="btn btn-gray" onclick="alternarModoEscuro()">🌙 Modo Escuro</button>
-      <button class="btn btn-gray" onclick="limparOrcamento()">🗑️ Limpar Tela</button>
-      <button class="btn btn-gray" onclick="abrirModalGestao()">⚙️ Painel de Gestão Avançada</button>
-      <button class="btn btn-blue" onclick="abrirGeradorIA()">🤖 Gerador IA</button>
+      <button id="btn-dark-mode" class="btn btn-gray" onclick="alternarModoEscuro()" aria-label="Alternar modo escuro">🌙 Modo Escuro</button>
+      <button class="btn btn-gray" onclick="limparOrcamento()" aria-label="Limpar orçamento atual">🗑️ Limpar Tela</button>
+      <button class="btn btn-gray" onclick="abrirModalGestao()" aria-label="Abrir painel de gestão avançada">⚙️ Painel de Gestão Avançada</button>
+      <button class="btn btn-blue" onclick="abrirGeradorIA()" aria-label="Abrir gerador de mensagens com IA">🤖 Gerador IA</button>
     </div>
     <div class="topbar-right">
-      <button id="btn-layout-print" class="btn btn-gray" onclick="alternarLayoutImpressao()">📄 Layout: A4</button>
-      <button class="btn btn-blue" onclick="salvarEImprimir()">🖨️ Salvar e Imprimir</button>
-      <button class="btn btn-green" onclick="enviarWhatsApp()">💬 Enviar para WhatsApp</button>
+      <button id="btn-layout-print" class="btn btn-gray" onclick="alternarLayoutImpressao()" aria-label="Alternar layout de impressão">📄 Layout: A4</button>
+      <button class="btn btn-blue" onclick="salvarEImprimir()" aria-label="Salvar e imprimir orçamento">🖨️ Salvar e Imprimir</button>
+      <button class="btn btn-green" onclick="enviarWhatsApp()" aria-label="Enviar orçamento para WhatsApp">💬 Enviar para WhatsApp</button>
     </div>
   </div>
 
@@ -48,7 +51,7 @@
     <div class="client-box">
       <div class="field" style="position: relative;">
         <label for="cliente-cnpj">CNPJ (Cole ou digite)</label>
-        <input type="text" id="cliente-cnpj" placeholder="Ex: 47.960.950/0001-00" oninput="buscarCNPJ()">
+        <input type="text" id="cliente-cnpj" placeholder="Ex: 47.960.950/0001-00" maxlength="18" inputmode="numeric" autocomplete="off" oninput="buscarCNPJ()">
         <div id="cnpj-spinner" class="spinner" style="display: none;"></div>
         <div id="crm-suggest-list" class="autocomplete-suggestions no-print" style="top: 55px; width: 100%;"></div>
       </div>
@@ -172,7 +175,7 @@
           <button class="tab-btn" onclick="mudarAbaGestao('tab-catalogo')">📦 Gerenciar Catálogo</button>
           <button class="tab-btn" onclick="mudarAbaGestao('tab-crm')">👥 Clientes (CRM)</button>
         </div>
-        <span class="close-modal" onclick="fecharModalGestao()">&times;</span>
+        <span class="close-modal" onclick="fecharModalGestao()" role="button" tabindex="0" aria-label="Fechar painel de gestão">&times;</span>
       </div>
       
       <div id="tab-dash" class="tab-content active-content">
@@ -277,7 +280,7 @@
     <div class="modal-content" style="width: 50%; max-width: 600px;">
       <div class="modal-header">
         <h3>🤖 Assistente de Copy com IA</h3>
-        <span class="close-modal" onclick="fecharGeradorIA()">&times;</span>
+        <span class="close-modal" onclick="fecharGeradorIA()" role="button" tabindex="0" aria-label="Fechar gerador de IA">&times;</span>
       </div>
       <div class="modal-body" style="display: flex; flex-direction: column; gap: 12px;">
         
@@ -296,7 +299,7 @@
         <label><strong>Resultado da IA:</strong></label>
         <textarea id="ia-resultado" rows="8" placeholder="O texto gerado aparecerá aqui..." style="width: 100%; box-sizing: border-box;"></textarea>
         
-        <button class="btn btn-green" onclick="copiarTextoIA()">📋 Copiar Texto</button>
+        <button class="btn btn-green" onclick="copiarTextoIA(event)">📋 Copiar Texto</button>
       </div>
     </div>
   </div>

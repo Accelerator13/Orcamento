@@ -1,6 +1,9 @@
 {
   "name": "orcamento",
   "version": "1.0.0",
+  "description": "Sistema interno de geração de orçamentos da Online Shopping, com busca de CNPJ, histórico, catálogo de produtos e gerador de mensagens com IA.",
+  "private": true,
+  "license": "UNLICENSED",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
