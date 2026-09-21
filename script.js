@@ -396,6 +396,17 @@ function salvarEImprimir() {
   window.print();
 }
 
+// Reforço extra: alguns navegadores atrasam o disparo de "beforeprint" quando
+// window.print() é chamado programaticamente. Sobrescrevemos window.print
+// para garantir que os elementos .no-print já estejam ocultos antes de abrir
+// a caixa de diálogo de impressão.
+const _printOriginal = window.print.bind(window);
+window.print = function() {
+  forcarOcultacaoImpressao(true);
+  ajustarLarguraParaImpressao(true);
+  _printOriginal();
+};
+
 // NAVEGAÇÃO DO PAINEL GESTÃO MODAL
 function abrirModalGestao() {
   document.getElementById("modal-gestao").style.display = "block";
@@ -727,6 +738,24 @@ function ajustarLarguraParaImpressao(expandir) {
 
 window.addEventListener("beforeprint", () => ajustarLarguraParaImpressao(true));
 window.addEventListener("afterprint", () => ajustarLarguraParaImpressao(false));
+
+// FORÇA A OCULTAÇÃO DOS BOTÕES NA IMPRESSÃO (reforço via JS)
+// Em alguns navegadores/fluxos de "Salvar como PDF" a regra @media print
+// do CSS não é aplicada a tempo. Para garantir 100% que a topbar e outros
+// elementos .no-print nunca apareçam impressos, escondemos via JS também.
+function forcarOcultacaoImpressao(esconder) {
+  document.querySelectorAll(".no-print").forEach(el => {
+    if (esconder) {
+      el.dataset.displayOriginal = el.style.display || "";
+      el.style.setProperty("display", "none", "important");
+    } else {
+      el.style.display = el.dataset.displayOriginal || "";
+      delete el.dataset.displayOriginal;
+    }
+  });
+}
+window.addEventListener("beforeprint", () => forcarOcultacaoImpressao(true));
+window.addEventListener("afterprint", () => forcarOcultacaoImpressao(false));
 
 window.onload = function() {
   document.getElementById("data-orcamento").value = new Date().toLocaleDateString('pt-BR', { day: 'numeric', month: 'long', year: 'numeric' });
