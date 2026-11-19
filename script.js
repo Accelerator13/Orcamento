@@ -933,7 +933,7 @@ async function gerarTextoComIA() {
 
   } catch (error) {
     console.error("Erro ao conectar com a API:", error);
-    campoResultado.value = "Erro de conexão com o servidor. Verifique se o server.js está rodando.";
+    campoResultado.value = "Erro de conexão com o servidor.\n\nInicie a aplicação com: npm start\nDepois abra http://localhost:3000.";
   } finally {
     if (botaoGerar) {
       botaoGerar.disabled = false;

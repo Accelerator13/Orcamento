@@ -100,6 +100,13 @@ app.use("/api", (req, res) => {
   res.status(404).json({ erro: "Rota não encontrada." });
 });
 
+app.use((err, req, res, next) => {
+  if (err instanceof SyntaxError && err.status === 400 && "body" in err) {
+    return res.status(400).json({ erro: "JSON da requisição inválido." });
+  }
+  next(err);
+});
+
 // Handler de erro genérico, para nunca vazar stack trace ao cliente
 app.use((err, req, res, next) => {
   console.error("Erro inesperado no servidor:", err);
