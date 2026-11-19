@@ -13,7 +13,7 @@
 
   <div class="topbar no-print">
     <div class="topbar-left">
-      <button id="btn-dark-mode" class="btn btn-gray" onclick="alternarModoEscuro()" aria-label="Alternar modo escuro">🌙 Modo Escuro</button>
+      <button type="button" id="btn-dark-mode" class="btn btn-gray" onclick="alternarModoEscuro()" aria-label="Alternar modo escuro">🌙 Modo Escuro</button>
       <button class="btn btn-gray" onclick="limparOrcamento()" aria-label="Limpar orçamento atual">🗑️ Limpar Tela</button>
       <button class="btn btn-gray" onclick="abrirModalGestao()" aria-label="Abrir painel de gestão avançada">⚙️ Painel de Gestão Avançada</button>
       <button class="btn btn-blue" onclick="abrirGeradorIA()" aria-label="Abrir gerador de mensagens com IA">🤖 Gerador IA</button>
@@ -167,9 +167,10 @@
 
   <div id="autocomplete-list" class="autocomplete-suggestions no-print"></div>
 
-  <div id="modal-gestao" class="modal no-print">
+  <div id="modal-gestao" class="modal no-print" role="dialog" aria-modal="true" aria-labelledby="titulo-modal-gestao" aria-hidden="true">
     <div class="modal-content" style="width: 85%; max-width: 1200px;">
       <div class="modal-header">
+        <h2 id="titulo-modal-gestao" style="position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0);">Painel de Gestão</h2>
         <div class="tabs-menu">
           <button class="tab-btn active" onclick="mudarAbaGestao('tab-dash')">📈 Dashboard & Histórico</button>
           <button class="tab-btn" onclick="mudarAbaGestao('tab-catalogo')">📦 Gerenciar Catálogo</button>
@@ -276,10 +277,10 @@
 
   <script src="script.js"></script>
 
-  <div id="modal-ia" class="modal no-print" style="display: none;">
+  <div id="modal-ia" class="modal no-print" style="display: none;" role="dialog" aria-modal="true" aria-labelledby="titulo-modal-ia" aria-hidden="true">
     <div class="modal-content" style="width: 50%; max-width: 600px;">
       <div class="modal-header">
-        <h3>🤖 Assistente de Copy com IA</h3>
+        <h3 id="titulo-modal-ia">🤖 Assistente de Copy com IA</h3>
         <span class="close-modal" onclick="fecharGeradorIA()" role="button" tabindex="0" aria-label="Fechar gerador de IA">&times;</span>
       </div>
       <div class="modal-body" style="display: flex; flex-direction: column; gap: 12px;">

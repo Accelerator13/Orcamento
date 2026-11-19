@@ -22,6 +22,25 @@ const OPCOES_PAGAMENTO = {
 };
 
 let divAtivaAutocompletar = null;
+let controleBuscaCNPJ = null;
+
+function lerArmazenamento(chave, fallback) {
+  try {
+    const valor = localStorage.getItem(chave);
+    return valor ? JSON.parse(valor) : fallback;
+  } catch (erro) {
+    console.error(`Dados inválidos em ${chave}. Usando valor padrão.`, erro);
+    return fallback;
+  }
+}
+
+function escreverArmazenamento(chave, valor) {
+  try {
+    localStorage.setItem(chave, JSON.stringify(valor));
+  } catch (erro) {
+    console.error(`Não foi possível salvar ${chave}.`, erro);
+  }
+}
 
 // Evita injeção de HTML/script quando nomes de produtos, clientes ou itens
 // importados de um backup .json (ou digitados com caracteres como < > " )
@@ -38,14 +57,16 @@ function escapeHTML(valor) {
 function obterCatalogo() {
   let cat = localStorage.getItem("app_catalogo_prod");
   if(!cat) {
-    localStorage.setItem("app_catalogo_prod", JSON.stringify(CATALOGO_PADRAO));
+    escreverArmazenamento("app_catalogo_prod", CATALOGO_PADRAO);
     return CATALOGO_PADRAO;
   }
-  return JSON.parse(cat);
+  const catalogo = lerArmazenamento("app_catalogo_prod", CATALOGO_PADRAO);
+  return Array.isArray(catalogo) ? catalogo : CATALOGO_PADRAO;
 }
 
 function obterClientes() {
-  return JSON.parse(localStorage.getItem("app_clientes_crm")) || [];
+  const clientes = lerArmazenamento("app_clientes_crm", []);
+  return Array.isArray(clientes) ? clientes : [];
 }
 
 function salvarClienteNoCRM(cnpj, nome) {
@@ -98,9 +119,11 @@ function calcular() {
   let totalDesconto = 0;
 
   if (tipoDesconto === "porcento") {
+    if (valorDescontoDigitado < 0) { valorDescontoDigitado = 0; inputValorDesconto.value = 0; }
     if (valorDescontoDigitado > 20) { alert("Limite máximo de desconto: 20%!"); valorDescontoDigitado = 20; inputValorDesconto.value = 20; }
     totalDesconto = subtotalGeral * (valorDescontoDigitado / 100);
   } else if (tipoDesconto === "reais") {
+    if (valorDescontoDigitado < 0) { valorDescontoDigitado = 0; inputValorDesconto.value = 0; }
     const limiteEmReais = subtotalGeral * 0.20;
     if (valorDescontoDigitado > limiteEmReais) { alert("Limite máximo de desconto atingido (20% do valor total)!"); valorDescontoDigitado = limiteEmReais; inputValorDesconto.value = limiteEmReais.toFixed(2); }
     totalDesconto = valorDescontoDigitado;
@@ -275,28 +298,45 @@ function buscarCNPJ() {
   const campoNome = document.getElementById("cliente-nome");
   const spinner = document.getElementById("cnpj-spinner");
 
+  if (cnpj.length !== 14 && controleBuscaCNPJ) {
+    controleBuscaCNPJ.abort();
+    controleBuscaCNPJ = null;
+    spinner.style.display = "none";
+    campoCnpj.classList.remove("campo-buscando");
+  }
+
   if (cnpj.length === 14) {
+    if (controleBuscaCNPJ) controleBuscaCNPJ.abort();
     spinner.style.display = "block";
     campoCnpj.classList.add("campo-buscando");
     campoNome.value = "Buscando dados na nuvem corporativa...";
 
-    const controle = new AbortController();
-    const timeoutId = setTimeout(() => controle.abort(), 8000);
+    const controleBuscaAtual = new AbortController();
+    controleBuscaCNPJ = controleBuscaAtual;
+    const timeoutId = setTimeout(() => controleBuscaAtual.abort(), 8000);
 
-    fetch(`https://brasilapi.com.br/api/cnpj/v1/${cnpj}`, { signal: controle.signal })
+    fetch(`https://brasilapi.com.br/api/cnpj/v1/${cnpj}`, { signal: controleBuscaAtual.signal })
       .then(res => { if (!res.ok) throw new Error("CNPJ não encontrado"); return res.json(); })
       .then(data => {
+        if (controleBuscaCNPJ !== controleBuscaAtual) return;
         const razao = data.razao_social || data.nome_fantasia || "";
         campoNome.value = razao;
         salvarClienteNoCRM(campoCnpj.value, razao);
         calcular();
       })
       .catch(() => {
+        if (controleBuscaCNPJ !== controleBuscaAtual) return;
+        if (controleBuscaAtual.signal.aborted) {
+          campoNome.value = "";
+          return;
+        }
         alert("CNPJ não localizado automaticamente. Insira os dados do cliente manualmente.");
         campoNome.value = "";
       })
       .finally(() => {
         clearTimeout(timeoutId);
+        if (controleBuscaCNPJ !== controleBuscaAtual) return;
+        controleBuscaCNPJ = null;
         spinner.style.display = "none";
         campoCnpj.classList.remove("campo-buscando");
       });
@@ -336,7 +376,7 @@ function salvarEstadoAtualNoLocalStorage() {
 function carregarRascunho() {
   const dados = localStorage.getItem("orc_rascunho_atual");
   if (!dados) { adicionarNovaLinha(); return; }
-  const rascunho = JSON.parse(dados);
+  const rascunho = lerArmazenamento("orc_rascunho_atual", {});
   
   document.getElementById("num-orcamento").textContent = rascunho.numero || "ORC-001";
   document.getElementById("cliente-cnpj").value = rascunho.cnpj || "";
@@ -362,7 +402,8 @@ function carregarRascunho() {
 }
 
 function salvarEImprimir() {
-  let historico = JSON.parse(localStorage.getItem("orc_historico")) || [];
+  let historico = lerArmazenamento("orc_historico", []);
+  if (!Array.isArray(historico)) historico = [];
   const numAtual = document.getElementById("num-orcamento").textContent;
   const cliente = document.getElementById("cliente-nome").value || "Cliente sem Nome";
   const total = document.getElementById("total-display").textContent;
@@ -372,7 +413,7 @@ function salvarEImprimir() {
   if(cnpj && cliente) salvarClienteNoCRM(cnpj, cliente);
 
   const idx = historico.findIndex(o => o.numero === numAtual);
-  const rascunhoSalvo = JSON.parse(localStorage.getItem("orc_rascunho_atual")) || {};
+  const rascunhoSalvo = lerArmazenamento("orc_rascunho_atual", {});
 
   const dadosOrc = {
     numero: numAtual, 
@@ -409,10 +450,20 @@ window.print = function() {
 
 // NAVEGAÇÃO DO PAINEL GESTÃO MODAL
 function abrirModalGestao() {
-  document.getElementById("modal-gestao").style.display = "block";
+  const modal = document.getElementById("modal-gestao");
+  modal.style.display = "block";
+  modal.setAttribute("aria-hidden", "false");
+  document.body.classList.add("modal-aberto");
   mudarAbaGestao('tab-dash');
 }
-function fecharModalGestao() { document.getElementById("modal-gestao").style.display = "none"; }
+function fecharModalGestao() {
+  const modal = document.getElementById("modal-gestao");
+  modal.style.display = "none";
+  modal.setAttribute("aria-hidden", "true");
+  if (!document.querySelector(".modal[style*='block']")) {
+    document.body.classList.remove("modal-aberto");
+  }
+}
 
 function mudarAbaGestao(idAba) {
   document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
@@ -428,7 +479,8 @@ function mudarAbaGestao(idAba) {
 }
 
 function atualizarDashboard() {
-  const historico = JSON.parse(localStorage.getItem("orc_historico")) || [];
+  const historico = lerArmazenamento("orc_historico", []);
+  if (!Array.isArray(historico)) return;
   let faturamento = 0, totalAprovados = 0;
 
   historico.forEach(o => {
@@ -445,7 +497,8 @@ function atualizarDashboard() {
 
 // RENDEREZAR HISTÓRICO COM REGRA DE ALERTA DE 3 DIAS (72H)
 function renderizarHistorico() {
-  const historico = JSON.parse(localStorage.getItem("orc_historico")) || [];
+  const historico = lerArmazenamento("orc_historico", []);
+  if (!Array.isArray(historico)) return;
   const busca = document.getElementById("busca-historico").value.toLowerCase();
   const corpo = document.getElementById("lista-historico-corpo");
   corpo.innerHTML = "";
@@ -501,7 +554,8 @@ function renderizarHistorico() {
 
 // TEXTO INTELIGENTE COM GANCHO DE HARDWARE PARA WHATSAPP
 function dispararWhatsFollowUp(idx) {
-  const historico = JSON.parse(localStorage.getItem("orc_historico")) || [];
+  const historico = lerArmazenamento("orc_historico", []);
+  if (!Array.isArray(historico)) return;
   const orc = historico[idx];
   if(!orc || !orc.raw) return;
 
@@ -530,17 +584,23 @@ function dispararWhatsFollowUp(idx) {
 }
 
 function mudarStatusOrcamento(idx, status) {
-  let h = JSON.parse(localStorage.getItem("orc_historico")); h[idx].status = status;
+  let h = lerArmazenamento("orc_historico", []);
+  if (!Array.isArray(h) || !h[idx]) return;
+  h[idx].status = status;
   localStorage.setItem("orc_historico", JSON.stringify(h)); atualizarDashboard();
 }
 function restaurarOrcamentoDoHistorico(idx) {
   if (!confirm("Abrir este orçamento salvo vai substituir o que está na tela agora (não salvo). Continuar?")) return;
-  localStorage.setItem("orc_rascunho_atual", JSON.parse(localStorage.getItem("orc_historico"))[idx].raw);
+  const historico = lerArmazenamento("orc_historico", []);
+  if (!Array.isArray(historico) || !historico[idx]?.raw) return;
+  localStorage.setItem("orc_rascunho_atual", historico[idx].raw);
   carregarRascunho(); fecharModalGestao();
 }
 function deletarDoHistorico(idx) {
   if(confirm("Eliminar este orçamento do histórico?")) {
-    let h = JSON.parse(localStorage.getItem("orc_historico")); h.splice(idx, 1);
+    let h = lerArmazenamento("orc_historico", []);
+    if (!Array.isArray(h) || !h[idx]) return;
+    h.splice(idx, 1);
     localStorage.setItem("orc_historico", JSON.stringify(h)); atualizarDashboard(); renderizarHistorico();
   }
 }
@@ -616,7 +676,7 @@ function removerClienteDoCRM(idx) { let c = obterClientes(); c.splice(idx, 1); l
 // BACKUP CENTRALIZADO JSON
 function exportarBackupCompleto() {
   const dados = {
-    historico: JSON.parse(localStorage.getItem("orc_historico")) || [],
+    historico: lerArmazenamento("orc_historico", []),
     catalogo: obterCatalogo(),
     crm: obterClientes(),
     proximo: localStorage.getItem("proximo_numero_orc") || "ORC-001",
@@ -627,6 +687,7 @@ function exportarBackupCompleto() {
   a.href = URL.createObjectURL(blob);
   a.download = `backup_sistema_vendas_${new Date().toISOString().slice(0,10)}.json`;
   a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
 }
 
 function importarBackupCompleto(input) {
@@ -635,6 +696,10 @@ function importarBackupCompleto(input) {
     leitor.onload = function(e) {
       try {
         const d = JSON.parse(e.target.result);
+        if (typeof d !== "object" || d === null) throw new Error("Formato inválido");
+        if (d.historico !== undefined && !Array.isArray(d.historico)) throw new Error("Histórico inválido");
+        if (d.catalogo !== undefined && !Array.isArray(d.catalogo)) throw new Error("Catálogo inválido");
+        if (d.crm !== undefined && !Array.isArray(d.crm)) throw new Error("CRM inválido");
         if(d.historico) localStorage.setItem("orc_historico", JSON.stringify(d.historico));
         if(d.catalogo) localStorage.setItem("app_catalogo_prod", JSON.stringify(d.catalogo));
         if(d.crm) localStorage.setItem("app_clientes_crm", JSON.stringify(d.crm));
@@ -658,9 +723,11 @@ function alternarLayoutImpressao() {
   if(card.classList.contains("layout-a4")) {
     card.classList.remove("layout-a4"); card.classList.add("layout-cupom");
     btn.innerHTML = "🖨️ Layout: Cupom 80mm";
+    localStorage.setItem("orc_layout_impressao", "cupom");
   } else {
     card.classList.remove("layout-cupom"); card.classList.add("layout-a4");
     btn.innerHTML = "📄 Layout: A4";
+    localStorage.setItem("orc_layout_impressao", "a4");
   }
 }
 
@@ -694,8 +761,9 @@ function alterarLogo(input) {
 }
 
 function alternarModoEscuro() {
-  document.body.classList.toggle("dark-theme");
-  document.getElementById("btn-dark-mode").innerHTML = document.body.classList.contains("dark-theme") ? "☀️ Modo Claro" : "🌙 Modo Escuro";
+  const ativo = document.body.classList.toggle("dark-theme");
+  localStorage.setItem("orc_modo_escuro", ativo ? "1" : "0");
+  document.getElementById("btn-dark-mode").innerHTML = ativo ? "☀️ Modo Claro" : "🌙 Modo Escuro";
 }
 
 function limparOrcamento() {
@@ -760,6 +828,16 @@ window.addEventListener("afterprint", () => forcarOcultacaoImpressao(false));
 window.onload = function() {
   document.getElementById("data-orcamento").value = new Date().toLocaleDateString('pt-BR', { day: 'numeric', month: 'long', year: 'numeric' });
   const customLogo = localStorage.getItem("orc_logo_custom"); if(customLogo) document.getElementById("logo-img").src = customLogo;
+  if (localStorage.getItem("orc_modo_escuro") === "1") {
+    document.body.classList.add("dark-theme");
+    document.getElementById("btn-dark-mode").innerHTML = "☀️ Modo Claro";
+  }
+  if (localStorage.getItem("orc_layout_impressao") === "cupom") {
+    const card = document.getElementById("orcamento-card");
+    card.classList.remove("layout-a4");
+    card.classList.add("layout-cupom");
+    document.getElementById("btn-layout-print").innerHTML = "🖨️ Layout: Cupom 80mm";
+  }
   obterCatalogo(); obterClientes(); carregarRascunho();
 };
 
@@ -769,12 +847,21 @@ window.onload = function() {
 
 // Abre a janela do gerador de IA
 function abrirGeradorIA() {
-  document.getElementById("modal-ia").style.display = "block";
+  const modal = document.getElementById("modal-ia");
+  modal.style.display = "block";
+  modal.setAttribute("aria-hidden", "false");
+  document.body.classList.add("modal-aberto");
+  document.getElementById("ia-objetivo").focus();
 }
 
 // Fecha a janela do gerador de IA
 function fecharGeradorIA() {
-  document.getElementById("modal-ia").style.display = "none";
+  const modal = document.getElementById("modal-ia");
+  modal.style.display = "none";
+  modal.setAttribute("aria-hidden", "true");
+  if (!document.querySelector(".modal[style*='block']")) {
+    document.body.classList.remove("modal-aberto");
+  }
 }
 
 // Copia o texto gerado pela IA para a área de transferência
@@ -809,6 +896,8 @@ async function gerarTextoComIA() {
   const objetivo = document.getElementById("ia-objetivo").value;
   const tom = document.getElementById("ia-tom").value;
   const campoResultado = document.getElementById("ia-resultado");
+  const botaoGerar = document.querySelector("#modal-ia .modal-body > .btn-blue");
+  const textoOriginalBotao = botaoGerar ? botaoGerar.innerHTML : "";
 
   if (!objetivo) {
     alert("Por favor, digite o objetivo da mensagem!");
@@ -816,6 +905,11 @@ async function gerarTextoComIA() {
   }
 
   campoResultado.value = "🤖 A IA está a processar a melhor estratégia... Por favor, aguarde.";
+  if (botaoGerar) {
+    botaoGerar.disabled = true;
+    botaoGerar.setAttribute("aria-busy", "true");
+    botaoGerar.innerHTML = "⏳ Gerando...";
+  }
 
   // A chave da API nunca deve ficar no navegador — quem abrir o "Ver código-fonte"
   // ou o repositório no GitHub conseguiria copiá-la. A chamada agora vai para o
@@ -840,7 +934,29 @@ async function gerarTextoComIA() {
   } catch (error) {
     console.error("Erro ao conectar com a API:", error);
     campoResultado.value = "Erro de conexão com o servidor. Verifique se o server.js está rodando.";
+  } finally {
+    if (botaoGerar) {
+      botaoGerar.disabled = false;
+      botaoGerar.removeAttribute("aria-busy");
+      botaoGerar.innerHTML = textoOriginalBotao;
+    }
   }
+
 }
+
+document.addEventListener("keydown", evento => {
+  if (evento.key === "Escape") {
+    fecharModalGestao();
+    fecharGeradorIA();
+  }
+});
+
+document.querySelectorAll(".modal").forEach(modal => {
+  modal.addEventListener("click", evento => {
+    if (evento.target !== modal) return;
+    if (modal.id === "modal-gestao") fecharModalGestao();
+    if (modal.id === "modal-ia") fecharGeradorIA();
+  });
+});
 
 

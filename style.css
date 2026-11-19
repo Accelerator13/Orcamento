@@ -5,6 +5,14 @@ body {
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   background-color: #edf2f7; color: #2d3748; margin: 0; padding: 40px 20px;
 }
+body.modal-aberto { overflow: hidden; }
+.btn:disabled { opacity: 0.65; cursor: wait; transform: none; }
+.modal-content { max-height: 90vh; overflow-y: auto; }
+.tab-btn:focus-visible, .btn:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-visible,
+.close-modal:focus-visible, .autocomplete-item:focus-visible {
+  outline: 3px solid #63b3ed;
+  outline-offset: 2px;
+}
 .card {
   margin: 0 auto; background: #ffffff; border-radius: 8px;
   box-shadow: 0 4px 6px rgba(0,0,0,0.05); padding: 40px; border: 1px solid #e2e8f0;
@@ -258,4 +266,20 @@ body.dark-theme .autocomplete-item:hover { background-color: #1a202c; color: #63
         width: 100% !important;
         overflow-x: auto !important; /* Cria uma barra de rolagem só na tabela se faltar espaço */
     }
+
+    .modal-content,
+    #modal-ia .modal-content {
+        width: calc(100% - 20px) !important;
+        max-width: none !important;
+        margin: 10px auto !important;
+        padding: 15px !important;
+        max-height: calc(100vh - 20px) !important;
+    }
+    .dashboard-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .historico-controls { align-items: stretch; flex-direction: column; }
+    #busca-historico { width: 100%; box-sizing: border-box; }
+    .backup-actions { flex-wrap: wrap; }
+    .cadastro-inputs { flex-direction: column; }
+    .tabs-menu { flex-wrap: wrap; }
+    .tab-btn { flex: 1 1 140px; border-radius: 6px; border: 1px solid #e2e8f0; }
 }

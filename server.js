@@ -7,6 +7,7 @@ const path = require("path");
 const app = express();
 const PORT = process.env.PORT || 3000;
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
+const GEMINI_MODEL = process.env.GEMINI_MODEL || "gemini-4-hydrogen";
 // Em produção, defina ALLOWED_ORIGIN no .env com o domínio real do site
 // (ex: https://orcamento.onlineshopping.com.br) para não aceitar requisições
 // de qualquer origem.
@@ -14,19 +15,35 @@ const ALLOWED_ORIGIN = process.env.ALLOWED_ORIGIN || "*";
 
 app.use(cors({ origin: ALLOWED_ORIGIN }));
 app.use(express.json({ limit: "10kb" }));
-app.use(express.static(__dirname)); // serve index.html, style.css, script.js, logo.png
+
+app.disable("x-powered-by");
+app.use((req, res, next) => {
+  res.setHeader("X-Content-Type-Options", "nosniff");
+  res.setHeader("Referrer-Policy", "same-origin");
+  res.setHeader("X-Frame-Options", "DENY");
+  next();
+});
+
+// Só os arquivos públicos do orçamento ficam acessíveis. Antes o Express
+// expunha a raiz inteira, inclusive server.js e arquivos de configuração.
+app.get("/", (req, res) => res.sendFile(path.join(__dirname, "index.html")));
+app.use("/style.css", express.static(path.join(__dirname, "style.css"), { fallthrough: false }));
+app.use("/script.js", express.static(path.join(__dirname, "script.js"), { fallthrough: false }));
+app.use("/logo.png", express.static(path.join(__dirname, "logo.png"), { fallthrough: false }));
 
 app.post("/api/gerar-mensagem", async (req, res) => {
-  if (!GEMINI_API_KEY) {
-    return res.status(500).json({ erro: "GEMINI_API_KEY não configurada no servidor (.env)." });
-  }
-
   const { objetivo, tom } = req.body || {};
   if (!objetivo || typeof objetivo !== "string" || !objetivo.trim()) {
     return res.status(400).json({ erro: "Informe o objetivo da mensagem." });
   }
   if (objetivo.length > 300) {
     return res.status(400).json({ erro: "Objetivo muito longo (máximo 300 caracteres)." });
+  }
+  if (typeof tom !== "string" || tom.length > 100) {
+    return res.status(400).json({ erro: "Tom da mensagem inválido." });
+  }
+  if (!GEMINI_API_KEY) {
+    return res.status(500).json({ erro: "GEMINI_API_KEY não configurada no servidor (.env)." });
   }
 
   const prompt = `Você é um especialista em copywriting para WhatsApp focado em vendas de hardware e tecnologia.
@@ -45,7 +62,7 @@ Não adicione nenhuma introdução como 'Aqui está o seu texto:', devolva apena
   const timeoutId = setTimeout(() => controle.abort(), 15000);
 
   try {
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`;
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(GEMINI_MODEL)}:generateContent?key=${GEMINI_API_KEY}`;
     const response = await fetch(url, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -89,6 +106,10 @@ app.use((err, req, res, next) => {
   res.status(500).json({ erro: "Erro interno do servidor." });
 });
 
-app.listen(PORT, () => {
-  console.log(`Servidor rodando em http://localhost:${PORT}`);
-});
+if (require.main === module) {
+  app.listen(PORT, () => {
+    console.log(`Servidor rodando em http://localhost:${PORT}`);
+  });
+}
+
+module.exports = { app };
